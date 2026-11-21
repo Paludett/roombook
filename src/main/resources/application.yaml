@@ -5,6 +5,9 @@ spring:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:${DB_PORT:5432}/${POSTGRES_DB:roombook}}
     username: ${SPRING_DATASOURCE_USERNAME:${POSTGRES_USER:roombook}}
     password: ${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD}}
+  jpa:
+    hibernate:
+      ddl-auto: validate
 management:
   endpoints:
     web:
