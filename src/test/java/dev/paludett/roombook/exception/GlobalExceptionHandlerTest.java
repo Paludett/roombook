@@ -36,6 +36,18 @@ class GlobalExceptionHandlerTest {
             throw new BusinessRuleException("Horário já reservado");
         }
 
+        @GetMapping("/probe/exclusion")
+        void exclusion() {
+            throw new org.springframework.dao.DataIntegrityViolationException("x",
+                    new java.sql.SQLException("conflicting key", "23P01"));
+        }
+
+        @GetMapping("/probe/other-integrity")
+        void otherIntegrity() {
+            throw new org.springframework.dao.DataIntegrityViolationException("x",
+                    new java.sql.SQLException("dup", "23505"));
+        }
+
         @PostMapping("/probe/400")
         void validate(@Valid @RequestBody Body body) {
         }
@@ -47,6 +59,20 @@ class GlobalExceptionHandlerTest {
     void setUp() {
         mvc = MockMvcBuilders.standaloneSetup(new Probe())
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
+    }
+
+    @Test
+    void exclusionViolationVira409() throws Exception {
+        mvc.perform(get("/probe/exclusion"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value(
+                        dev.paludett.roombook.service.BookingService.OVERLAP_MESSAGE));
+    }
+
+    @Test
+    void outraViolacaoNaoViraConflito() {
+        org.junit.jupiter.api.Assertions.assertThrows(Exception.class,
+                () -> mvc.perform(get("/probe/other-integrity")));
     }
 
     @Test
