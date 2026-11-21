@@ -17,6 +17,10 @@ management:
       exposure:
         include: health
 roombook:
+  booking:
+    opening: ${BOOKING_OPENING:07:00}
+    closing: ${BOOKING_CLOSING:22:00}
+    zone: ${BOOKING_ZONE:America/Sao_Paulo}
   cors:
     # Origem(ns) do Angular, separadas por vírgula. Vazio = CORS desligado.
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:${FRONT_PORT:4200}}
