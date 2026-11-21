@@ -1,6 +1,9 @@
 spring:
   application:
     name: roombook
+  web:
+    locale: pt_BR
+    locale-resolver: fixed
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:${DB_PORT:5432}/${POSTGRES_DB:roombook}}
     username: ${SPRING_DATASOURCE_USERNAME:${POSTGRES_USER:roombook}}
