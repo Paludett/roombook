@@ -13,7 +13,7 @@
 - Nunca adicione `Co-Authored-By` (Claude, Codex, ChatGPT), "Generated with Claude Code", link de sessão ou qualquer atribuição de IA. O único autor é o Lorenzo.
 
 ### Usuários de teste
-Ainda não há autenticação nem entidade de usuário. A issue que introduzir auth deve criar um seed de dev (migration Flyway em `db/migration`, só no perfil de dev) com um usuário por perfil e senhas fictícias, e documentar aqui login/senha de cada um.
+Ainda não há autenticação nem entidade de usuário. Por ora só há dados de exemplo (perfil `dev`, `db/seed-dev`): salas e profissionais (`@exemplo.test`), sem login. A issue que introduzir auth deve criar um seed de dev (migration Flyway em `db/migration`, só no perfil de dev) com um usuário por perfil e senhas fictícias, e documentar aqui login/senha de cada um.
 
 ### Invariantes
 <!-- o que nunca pode quebrar -->
