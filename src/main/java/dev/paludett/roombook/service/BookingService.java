@@ -25,6 +25,8 @@ import java.time.ZonedDateTime;
 @Transactional
 public class BookingService {
 
+	public static final String OVERLAP_MESSAGE =
+			"A sala já está reservada ou em higienização nesse horário";
 	private static final int BLOCK_MINUTES = 30;
 
 	private final BookingRepository bookings;
@@ -57,12 +59,17 @@ public class BookingService {
 			throw new BusinessRuleException("A sala não aceita reservas (status " + room.getStatus() + ")");
 		}
 
+		Instant blockedUntil = req.endTime().plus(Duration.ofMinutes(room.getSanitizationMinutes()));
+		if (bookings.existsOverlap(room.getId(), req.startTime(), blockedUntil)) {
+			throw new BusinessRuleException(OVERLAP_MESSAGE);
+		}
+
 		Booking b = new Booking();
 		b.setRoom(room);
 		b.setProfessional(professional);
 		b.setStartTime(req.startTime());
 		b.setEndTime(req.endTime());
-		b.setBlockedUntil(req.endTime().plus(Duration.ofMinutes(room.getSanitizationMinutes())));
+		b.setBlockedUntil(blockedUntil);
 		b.setPurpose(purpose);
 		b.setStatus(BookingStatus.CONFIRMED);
 		return BookingResponse.from(bookings.save(b));

@@ -78,6 +78,22 @@ class BookingServiceTest {
 	}
 
 	@Test
+	void rejectsOverlap() {
+		// bloqueio = fim + 20min de higienização
+		when(bookings.existsOverlap(any(), any(), any())).thenReturn(true);
+		assertThatThrownBy(() -> service.create(req("2030-01-02T14:00:00Z", "2030-01-02T15:00:00Z", "x")))
+				.isInstanceOf(BusinessRuleException.class).hasMessageContaining("reservada");
+	}
+
+	@Test
+	void overlapQueryReceivesBlockedUntil() {
+		service.create(req("2030-01-02T14:00:00Z", "2030-01-02T15:00:00Z", "x"));
+		org.mockito.Mockito.verify(bookings).existsOverlap(any(),
+				org.mockito.ArgumentMatchers.eq(Instant.parse("2030-01-02T14:00:00Z")),
+				org.mockito.ArgumentMatchers.eq(Instant.parse("2030-01-02T15:20:00Z")));
+	}
+
+	@Test
 	void allowsEndingExactlyAtClosing() {
 		// 21:00-22:00 -03:00
 		service.create(req("2030-01-03T00:00:00Z", "2030-01-03T01:00:00Z", "x"));
