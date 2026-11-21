@@ -1,7 +1,7 @@
 # Spec: Sobreposição de reservas com higienização
 
 - **Issue:** #9
-- **Status:** rascunho
+- **Status:** implementada
 
 ## Contexto
 Uma sala nunca pode ter duas reservas ativas no mesmo horário. Depois de cada reserva há um intervalo de higienização, que também bloqueia a sala.
@@ -17,10 +17,10 @@ Uma sala nunca pode ter duas reservas ativas no mesmo horário. Depois de cada r
 - Migration versionada por timestamp.
 
 ## Critérios de aceite
-- [ ] Checagem no service com query `start_time < :novoBlockedUntil AND blocked_until > :novoInicio`, ignorando canceladas
-- [ ] Reforço no banco: migration com `btree_gist` e exclusion constraint sobre `tstzrange(start_time, blocked_until)` para status ativos
-- [ ] `blocked_until` é coluna persistida porque `timestamptz + interval` não é immutable e não pode ser usado direto na constraint
-- [ ] Violação da constraint convertida em 409 com mensagem clara
+- [x] Checagem no service com query `start_time < :novoBlockedUntil AND blocked_until > :novoInicio`, ignorando canceladas
+- [x] Reforço no banco: migration com `btree_gist` e exclusion constraint sobre `tstzrange(start_time, blocked_until)` para status ativos
+- [x] `blocked_until` é coluna persistida porque `timestamptz + interval` não é immutable e não pode ser usado direto na constraint
+- [x] Violação da constraint convertida em 409 com mensagem clara
 
 ## Fora de escopo
 - Validação de horário e dados da reserva (ver `reserva.md`, #8).
