@@ -1,0 +1,6 @@
+# Perfil dev: acrescenta dados de exemplo (db/seed-dev) às migrations normais.
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/seed-dev
+    # migrations de outras issues podem ter timestamp anterior ao seed
+    out-of-order: true
