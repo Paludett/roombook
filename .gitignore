@@ -4,4 +4,5 @@ target/
 HELP.md
 .maestri/
 .wt.env
+.env
 .wt/
