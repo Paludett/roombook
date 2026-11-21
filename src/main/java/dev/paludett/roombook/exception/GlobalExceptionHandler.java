@@ -1,8 +1,11 @@
 package dev.paludett.roombook.exception;
 
+import dev.paludett.roombook.service.BookingService;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -29,6 +32,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(BusinessRuleException.class)
     ProblemDetail handleBusinessRule(BusinessRuleException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    /** 23P01 = exclusion_violation: corrida entre reservas concorrentes barrada pelo banco. */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ProblemDetail handleDataIntegrity(DataIntegrityViolationException ex) {
+        for (Throwable t = ex; t != null; t = t.getCause()) {
+            if (t instanceof SQLException sql && "23P01".equals(sql.getSQLState())) {
+                return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, BookingService.OVERLAP_MESSAGE);
+            }
+            if (t.getCause() == t) break;
+        }
+        throw ex;
     }
 
     @ExceptionHandler(InvalidRequestException.class)
