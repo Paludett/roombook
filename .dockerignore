@@ -1,0 +1,8 @@
+target/
+.git/
+.idea/
+.maestri/
+.wt/
+.wt.env
+.env
+frontend/
