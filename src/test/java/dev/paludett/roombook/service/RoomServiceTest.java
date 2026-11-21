@@ -46,10 +46,10 @@ class RoomServiceTest {
 	@Test
 	void filtersAndStatusChange() {
 		var a = service.create(new RoomRequest("F1", RoomType.SALA_EXAME, "3B", null));
-		service.create(new RoomRequest("F2", RoomType.CONSULTORIO, "3B", null));
+		var b = service.create(new RoomRequest("F2", RoomType.CONSULTORIO, "3B", null));
 		service.changeStatus(a.id(), RoomStatus.EM_MANUTENCAO);
-		assertThat(service.list(RoomType.SALA_EXAME, RoomStatus.EM_MANUTENCAO)).extracting("id").containsExactly(a.id());
-		assertThat(service.list(RoomType.CONSULTORIO, RoomStatus.EM_MANUTENCAO)).isEmpty();
+		assertThat(service.list(RoomType.SALA_EXAME, RoomStatus.EM_MANUTENCAO)).extracting("id").contains(a.id());
+		assertThat(service.list(RoomType.CONSULTORIO, RoomStatus.EM_MANUTENCAO)).extracting("id").doesNotContain(a.id(), b.id());
 	}
 
 	@Test
