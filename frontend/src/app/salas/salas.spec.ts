@@ -33,7 +33,8 @@ describe('Salas', () => {
     const cards = el.querySelectorAll('a.card');
     expect(cards.length).toBe(2);
     expect(cards[0].textContent).toContain('Sala de exame');
-    expect(cards[1].classList).toContain('manutencao');
+    expect(cards[1].classList).toContain('room--maint');
+    expect(cards[1].textContent).toContain('Agenda bloqueada');
     expect(cards[1].textContent).toContain('Em manutenção');
     expect(cards[0].getAttribute('href')).toBe('/salas/1/agenda');
   });
@@ -44,5 +45,29 @@ describe('Salas', () => {
     f.componentInstance.filtrar('tipo', 'CONSULTORIO');
     f.componentInstance.filtrar('status', 'EM_MANUTENCAO');
     expect(list).toHaveBeenLastCalledWith({ type: 'CONSULTORIO', status: 'EM_MANUTENCAO' });
+  });
+
+  it('chip de tipo marca aria-pressed e resumo conta manutenção', async () => {
+    const f = TestBed.createComponent(Salas);
+    await f.whenStable();
+    const el = f.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('2 salas · 1 em manutenção');
+    const chips = el.querySelectorAll<HTMLButtonElement>('.tipo-chips .chip');
+    expect(chips[0].getAttribute('aria-pressed')).toBe('true');
+    chips[1].click();
+    await f.whenStable();
+    expect(list).toHaveBeenLastCalledWith({ type: 'CONSULTORIO', status: undefined });
+    expect(chips[1].getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('lista vazia mostra estado vazio com "Limpar filtros"', async () => {
+    list.mockReturnValue(of([]));
+    const f = TestBed.createComponent(Salas);
+    await f.whenStable();
+    f.componentInstance.filtrar('tipo', 'SALA_REUNIAO');
+    await f.whenStable();
+    const el = f.nativeElement as HTMLElement;
+    expect(el.querySelector('.empty')?.textContent).toContain('Nenhuma sala encontrada');
+    expect(el.querySelector('.empty button')?.textContent).toContain('Limpar filtros');
   });
 });
