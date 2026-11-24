@@ -1,5 +1,5 @@
 import { AvailabilityBlock, BookingResponse } from '../core/api.models';
-import { dividir, hora, montarLinhas, somaDias } from './agenda-util';
+import { dataCurta, dividir, hora, montarLinhas, somaDias } from './agenda-util';
 
 const blk = (s: string, e: string, state: AvailabilityBlock['state']): AvailabilityBlock => ({
   start: s,
@@ -18,7 +18,7 @@ describe('agenda-util', () => {
     expect(somaDias('2027-01-01', -1)).toBe('2026-12-31');
   });
 
-  it('montarLinhas junta ocupado da mesma reserva, higienização e passado; livre fica avulso', () => {
+  it('montarLinhas: uma linha por bloco; só os blocos da mesma reserva se juntam', () => {
     const reserva = {
       id: 7,
       startTime: '2026-11-24T12:00:00Z',
@@ -35,29 +35,47 @@ describe('agenda-util', () => {
         blk('2026-11-24T12:00:00Z', '2026-11-24T12:30:00Z', 'BOOKED'),
         blk('2026-11-24T12:30:00Z', '2026-11-24T13:00:00Z', 'BOOKED'),
         blk('2026-11-24T13:00:00Z', '2026-11-24T13:30:00Z', 'CLEANING'),
+        blk('2026-11-24T13:30:00Z', '2026-11-24T14:00:00Z', 'CLEANING'),
       ],
       [reserva],
     );
     expect(l.map((x) => [x.tipo, x.n])).toEqual([
-      ['unav', 2],
+      ['unav', 1],
+      ['unav', 1],
       ['free', 1],
       ['free', 1],
       ['booked', 2],
       ['clean', 1],
+      ['clean', 1],
     ]);
-    expect(l[3].booking?.id).toBe(7);
-    expect(l[3].end).toBe('2026-11-24T13:00:00Z');
+    expect(l[4].booking?.id).toBe(7);
+    expect(l[4].starts).toEqual(['2026-11-24T12:00:00Z', '2026-11-24T12:30:00Z']);
   });
 
-  it('dividir parte no meio e mantém uma coluna se só há uma linha', () => {
-    const mk = (n: number) =>
-      Array.from({ length: n }, (_, i) => ({
-        tipo: 'free' as const,
-        start: `${i}`,
-        end: `${i}`,
-        n: 1,
-      }));
-    expect(dividir(mk(4)).map((c) => c.length)).toEqual([2, 2]);
-    expect(dividir(mk(1)).length).toBe(1);
+  it('dividir parte às 14:00 (clínica) ou no meio', () => {
+    const mk = (starts: string[]) =>
+      starts.map((s) => ({ tipo: 'free' as const, start: s, end: s, n: 1, starts: [s] }));
+    // 16:30Z = 13:30 local; 17:00Z = 14:00 local
+    expect(
+      dividir(mk(['2026-11-24T16:00:00Z', '2026-11-24T16:30:00Z', '2026-11-24T17:00:00Z'])).map(
+        (c) => c.length,
+      ),
+    ).toEqual([2, 1]);
+    expect(
+      dividir(
+        mk([
+          '2026-11-24T10:00:00Z',
+          '2026-11-24T10:30:00Z',
+          '2026-11-24T11:00:00Z',
+          '2026-11-24T11:30:00Z',
+        ]),
+      ).map((c) => c.length),
+    ).toEqual([2, 2]);
+    expect(dividir(mk(['2026-11-24T10:00:00Z'])).length).toBe(1);
+  });
+
+  it('dataCurta no formato do mockup', () => {
+    expect(dataCurta('2026-11-24', true)).toBe('Hoje · ter, 24 nov 2026');
+    expect(dataCurta('2026-11-25', false)).toBe('qua, 25 nov 2026');
   });
 });

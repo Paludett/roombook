@@ -30,7 +30,10 @@ describe('Agenda', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: new Map([['id', '1']]) } } },
+        {
+          provide: ActivatedRoute,
+          useValue: { snapshot: { paramMap: new Map([['id', '1']]), queryParamMap: new Map() } },
+        },
         {
           provide: RoomService,
           useValue: {
@@ -165,6 +168,28 @@ describe('Agenda', () => {
     f.detectChanges();
     expect(el.querySelector('#fin')?.classList.contains('is-error')).toBe(true);
     expect(el.querySelector('.overlay')?.textContent).toContain('tamanho inválido');
+    f.destroy();
+  });
+
+  it('hoje: linha de agora com hora e blocos livres depois dela continuam renderizando', async () => {
+    const h = Math.floor(Date.now() / 1800000) * 1800000;
+    const b = (k: number, state: AvailabilityBlock['state']) => ({
+      start: new Date(h + k * 1800000).toISOString(),
+      end: new Date(h + (k + 1) * 1800000).toISOString(),
+      state,
+    });
+    availability.mockReturnValue(
+      of({
+        roomId: 1,
+        date: '',
+        blocks: [b(-1, 'UNAVAILABLE'), b(0, 'UNAVAILABLE'), b(1, 'FREE'), b(2, 'FREE')],
+      }),
+    );
+    const f = TestBed.createComponent(Agenda);
+    await f.whenStable();
+    const el = f.nativeElement as HTMLElement;
+    expect(el.querySelector('.now span')?.textContent).toMatch(/^\d\d:\d\d$/);
+    expect(el.querySelectorAll('.timeline button.blk--free').length).toBe(2);
     f.destroy();
   });
 });

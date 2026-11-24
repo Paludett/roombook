@@ -18,6 +18,7 @@ import { RoomService } from '../core/room.service';
 import { ToastService } from '../core/toast.service';
 import {
   dataClinica,
+  dataCurta,
   dataLonga,
   dividir,
   hora,
@@ -25,7 +26,7 @@ import {
   montarLinhas,
   somaDias,
 } from './agenda-util';
-import { STATUS, TIPOS } from './rotulos';
+import { STATUS, STATUS_ICON, TIPO_ICON, TIPOS } from './rotulos';
 
 const BADGE = { ATIVA: 'badge--ok', EM_MANUTENCAO: 'badge--warn', INATIVA: 'badge--inactive' };
 // campo do ProblemDetail.errors[] → controle do formulário
@@ -52,17 +53,25 @@ export class Agenda {
   private errors = inject(ErrorService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
-  private roomId = Number(inject(ActivatedRoute).snapshot.paramMap.get('id'));
+  private snap = inject(ActivatedRoute).snapshot;
+  private roomId = Number(this.snap.paramMap.get('id'));
   private carga = 0;
 
   readonly hora = hora;
   readonly badge = BADGE;
   readonly tipos = TIPOS;
   readonly statuses = STATUS;
+  readonly tipoIcon = TIPO_ICON;
+  readonly statusIcon = STATUS_ICON;
   readonly esqueletos = [1, 2, 3, 4, 5, 6];
 
   sala = signal<RoomResponse | null>(null);
-  data = signal(dataClinica());
+  /** Data inicial: ?data=AAAA-MM-DD (link direto) ou hoje no fuso da clínica. */
+  data = signal(
+    /^\d{4}-\d{2}-\d{2}$/.test(this.snap.queryParamMap.get('data') ?? '')
+      ? this.snap.queryParamMap.get('data')!
+      : dataClinica(),
+  );
   blocks = signal<AvailabilityBlock[]>([]);
   reservas = signal<BookingResponse[]>([]);
   agora = signal(Date.now());
@@ -75,8 +84,11 @@ export class Agenda {
   erroModal = signal<string | null>(null);
   profissionais = signal<ProfessionalResponse[]>([]);
 
+  agoraHora = computed(() => hora(new Date(this.agora())));
   hoje = computed(() => this.data() === dataClinica(new Date(this.agora())));
   dataLabel = computed(() => dataLonga(this.data()));
+  dataBotao = computed(() => dataCurta(this.data(), this.hoje()));
+  dataBotaoCurta = computed(() => this.dataBotao().replace(/ \d{4}$/, ''));
   salaFora = computed(() => !!this.sala() && this.sala()!.status !== 'ATIVA');
   colunas = computed(() => {
     const l = montarLinhas(this.blocks(), this.reservas());
@@ -145,6 +157,9 @@ export class Agenda {
   }
   deslocar(dias: number) {
     this.mudarData(somaDias(this.data(), dias));
+  }
+  escolherData(input: HTMLInputElement) {
+    input.showPicker();
   }
   irHoje() {
     this.mudarData(dataClinica());

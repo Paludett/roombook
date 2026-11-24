@@ -45,10 +45,12 @@ export interface Linha {
   end: string;
   /** número de blocos de 30 min (altura). */
   n: number;
+  /** início de cada bloco de 30 min da linha (uma marca na régua por bloco). */
+  starts: string[];
   booking?: BookingResponse;
 }
 
-/** Junta blocos vizinhos do mesmo estado (e da mesma reserva) numa linha só; livres ficam avulsos. */
+/** Uma linha por bloco de 30 min; só os blocos de uma mesma reserva viram uma linha. */
 export function montarLinhas(blocks: AvailabilityBlock[], bookings: BookingResponse[]): Linha[] {
   const reservaDe = (b: AvailabilityBlock) =>
     bookings.find(
@@ -66,24 +68,36 @@ export function montarLinhas(blocks: AvailabilityBlock[], bookings: BookingRespo
             : 'unav';
     const booking = tipo === 'booked' ? reservaDe(b) : undefined;
     const ult = out[out.length - 1];
-    if (ult && tipo !== 'free' && ult.tipo === tipo && ult.booking?.id === booking?.id) {
+    if (ult && booking && ult.booking?.id === booking.id) {
       ult.end = b.end;
       ult.n++;
+      ult.starts.push(b.start);
     } else {
-      out.push({ tipo, start: b.start, end: b.end, n: 1, booking });
+      out.push({ tipo, start: b.start, end: b.end, n: 1, starts: [b.start], booking });
     }
   }
   return out;
 }
 
-/** Divide as linhas em duas colunas (manhã/tarde) no bloco do meio do expediente. */
+/** Divide em duas colunas (manhã | tarde): na primeira linha a partir de 14:00 ou, sem ela, no meio. */
 export function dividir(linhas: Linha[]): Linha[][] {
-  const total = linhas.reduce((s, l) => s + l.n, 0);
-  const a: Linha[] = [];
-  let acc = 0;
-  let i = 0;
-  while (i < linhas.length && acc < total / 2) acc += linhas[i++].n;
-  a.push(...linhas.slice(0, i));
-  const b = linhas.slice(i);
-  return b.length ? [a, b] : [a];
+  let i = linhas.findIndex((l) => hora(l.start) >= '14:00');
+  if (i <= 0) i = Math.ceil(linhas.length / 2);
+  return i >= linhas.length ? [linhas] : [linhas.slice(0, i), linhas.slice(i)];
+}
+
+/** "Hoje · ter, 24 nov 2026" / "qua, 25 nov 2026" */
+export function dataCurta(data: string, hoje: boolean): string {
+  const t = new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'UTC',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+    .format(new Date(`${data}T12:00:00Z`))
+    .replace(/\./g, '')
+    .replace(',', ',')
+    .replace(/ de /g, ' ');
+  return hoje ? `Hoje · ${t}` : t;
 }
