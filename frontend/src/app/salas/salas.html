@@ -1,0 +1,44 @@
+<h2>Salas</h2>
+<div class="filtros">
+  <label>
+    Tipo
+    <select (change)="filtrar('tipo', $any($event.target).value)">
+      <option value="">Todos</option>
+      @for (t of tipos; track t[0]) {
+        <option [value]="t[0]">{{ t[1] }}</option>
+      }
+    </select>
+  </label>
+  <label>
+    Status
+    <select (change)="filtrar('status', $any($event.target).value)">
+      <option value="">Todos</option>
+      @for (s of statuses; track s[0]) {
+        <option [value]="s[0]">{{ s[1] }}</option>
+      }
+    </select>
+  </label>
+</div>
+
+@if (carregando()) {
+  <p>Carregando…</p>
+} @else if (salas().length === 0) {
+  <p class="vazio">Nenhuma sala encontrada.</p>
+} @else {
+  <ul class="cards">
+    @for (s of salas(); track s.id) {
+      <li>
+        <a
+          class="card"
+          [class.manutencao]="s.status === 'EM_MANUTENCAO'"
+          [routerLink]="['/salas', s.id, 'agenda']"
+        >
+          <strong>{{ s.name }}</strong>
+          <span>{{ tipoLabel(s.type) }}</span>
+          <span>{{ s.floorWing }}</span>
+          <span class="badge" [class]="'badge ' + s.status">{{ statusLabel(s.status) }}</span>
+        </a>
+      </li>
+    }
+  </ul>
+}
