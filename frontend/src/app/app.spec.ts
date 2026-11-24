@@ -11,12 +11,12 @@ describe('App', () => {
     }).compileComponents();
   });
 
-  it('renders nav links to Salas and Reservas', async () => {
+  it('renders nav links to Salas, Reservas and Profissionais', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const links = Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll('nav a'),
     ).map((a) => a.textContent?.trim());
-    expect(links).toEqual(['Salas', 'Reservas']);
+    expect(links).toEqual(['Salas', 'Reservas', 'Profissionais']);
   });
 });
