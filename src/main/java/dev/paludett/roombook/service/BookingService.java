@@ -2,7 +2,6 @@ package dev.paludett.roombook.service;
 
 import dev.paludett.roombook.config.BookingProperties;
 import dev.paludett.roombook.domain.Booking;
-import dev.paludett.roombook.domain.BookingStatus;
 import dev.paludett.roombook.domain.Room;
 import dev.paludett.roombook.domain.RoomStatus;
 import dev.paludett.roombook.dto.BookingRequest;
@@ -71,8 +70,14 @@ public class BookingService {
 		b.setEndTime(req.endTime());
 		b.setBlockedUntil(blockedUntil);
 		b.setPurpose(purpose);
-		b.setStatus(BookingStatus.CONFIRMED);
 		return BookingResponse.from(bookings.save(b));
+	}
+
+	public BookingResponse cancel(Long id) {
+		Booking b = bookings.findById(id)
+				.orElseThrow(() -> new NotFoundException("Reserva não encontrada: " + id));
+		b.cancel(clock.instant());
+		return BookingResponse.from(bookings.saveAndFlush(b));
 	}
 
 	private void validateTime(Instant start, Instant end) {

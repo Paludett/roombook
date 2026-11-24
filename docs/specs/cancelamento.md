@@ -1,7 +1,7 @@
 # Spec: Cancelamento e ciclo de status da reserva
 
 - **Issue:** #10
-- **Status:** rascunho
+- **Status:** implementada
 
 ## Contexto
 `PATCH /bookings/{id}/cancel` cancela uma reserva. As transições de status seguem regras fixas, concentradas num único ponto do código.
@@ -14,10 +14,10 @@
 - Transições centralizadas na entidade ou num único método do service; nenhum outro código altera o status diretamente.
 
 ## Critérios de aceite
-- [ ] Só reservas `CONFIRMED` podem ser canceladas, e só antes do início
-- [ ] Cancelamento libera o horário e o intervalo de higienização
-- [ ] Transições inválidas retornam 409
-- [ ] Transições centralizadas na entidade ou num método único do service
+- [x] Só reservas `CONFIRMED` podem ser canceladas, e só antes do início
+- [x] Cancelamento libera o horário e o intervalo de higienização
+- [x] Transições inválidas retornam 409
+- [x] Transições centralizadas na entidade ou num método único do service
 
 ## Fora de escopo
 - Reagendamento.
