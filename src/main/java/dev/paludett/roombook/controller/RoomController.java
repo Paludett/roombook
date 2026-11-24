@@ -5,6 +5,8 @@ import dev.paludett.roombook.domain.RoomType;
 import dev.paludett.roombook.dto.RoomRequest;
 import dev.paludett.roombook.dto.RoomResponse;
 import dev.paludett.roombook.dto.RoomStatusRequest;
+import dev.paludett.roombook.dto.AvailabilityResponse;
+import dev.paludett.roombook.service.AvailabilityService;
 import dev.paludett.roombook.service.RoomService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -17,9 +19,11 @@ import java.util.List;
 public class RoomController {
 
 	private final RoomService service;
+	private final AvailabilityService availability;
 
-	public RoomController(RoomService service) {
+	public RoomController(RoomService service, AvailabilityService availability) {
 		this.service = service;
+		this.availability = availability;
 	}
 
 	@GetMapping
@@ -47,5 +51,10 @@ public class RoomController {
 	@PatchMapping("/{id}/status")
 	public RoomResponse changeStatus(@PathVariable Long id, @Valid @RequestBody RoomStatusRequest req) {
 		return service.changeStatus(id, req.status());
+	}
+
+	@GetMapping("/{id}/availability")
+	public AvailabilityResponse availability(@PathVariable Long id, @RequestParam(required = false) String date) {
+		return availability.availability(id, date);
 	}
 }
