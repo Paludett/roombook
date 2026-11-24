@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { RoomRequest, RoomResponse, RoomStatus, RoomStatusRequest, RoomType } from './api.models';
+import { AvailabilityResponse, RoomRequest, RoomResponse, RoomStatus, RoomStatusRequest, RoomType } from './api.models';
 
 @Injectable({ providedIn: 'root' })
 export class RoomService {
@@ -16,6 +16,11 @@ export class RoomService {
   }
   get(id: number) {
     return this.http.get<RoomResponse>(`${this.url}/${id}`);
+  }
+  availability(id: number, date: string) {
+    return this.http.get<AvailabilityResponse>(`${this.url}/${id}/availability`, {
+      params: { date },
+    });
   }
   create(req: RoomRequest) {
     return this.http.post<RoomResponse>(this.url, req);
