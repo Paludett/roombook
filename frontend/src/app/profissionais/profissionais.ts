@@ -10,8 +10,8 @@ import { ToastService } from '../core/toast.service';
 
 type Campo = keyof ProfessionalRequest;
 const CAMPOS: Campo[] = ['name', 'licenseNumber', 'specialty', 'email'];
-/** "CRM-RS 12345": sigla do conselho, UF opcional e número. */
-export const REGISTRO = /^[A-Za-z]{2,6}(-[A-Za-z]{2})? \d{1,10}$/;
+/** Mesma regra do backend (#7): blocos alfanuméricos separados por espaço, ".", "/" ou "-". */
+export const REGISTRO = /^[A-Za-z0-9]+([ ./-][A-Za-z0-9]+)*$/;
 
 @Component({
   selector: 'app-profissionais',
@@ -49,7 +49,15 @@ export class Profissionais {
 
   form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(150)]],
-    licenseNumber: ['', [Validators.required, Validators.pattern(REGISTRO)]],
+    licenseNumber: [
+      '',
+      [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(50),
+        Validators.pattern(REGISTRO),
+      ],
+    ],
     specialty: ['', [Validators.required, Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
   });
@@ -133,6 +141,7 @@ export class Profissionais {
     if (ctl.errors['required']) return 'Campo obrigatório';
     if (ctl.errors['email']) return 'E-mail inválido';
     if (ctl.errors['pattern']) return 'Formato inválido. Ex.: CRM-RS 12345';
+    if (ctl.errors['minlength']) return 'Mínimo de 3 caracteres';
     if (ctl.errors['maxlength']) return 'Texto muito longo';
     return 'Valor inválido';
   }

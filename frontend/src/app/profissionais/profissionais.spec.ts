@@ -88,12 +88,16 @@ describe('Profissionais', () => {
     f.detectChanges();
     expect(create).not.toHaveBeenCalled();
     expect(el.querySelectorAll('.err-msg').length).toBe(4);
-    preencher(c, { email: 'x', licenseNumber: '12345' });
+    preencher(c, { email: 'x', licenseNumber: 'CRM#12' });
     f.detectChanges();
     expect(c.erro('email')).toBe('E-mail inválido');
     expect(c.erro('licenseNumber')).toContain('CRM-RS 12345');
-    preencher(c, { licenseNumber: 'CRM 9' });
-    expect(c.erro('licenseNumber')).toBeNull();
+    preencher(c, { licenseNumber: 'CR' });
+    expect(c.erro('licenseNumber')).toBe('Mínimo de 3 caracteres');
+    for (const ok of ['CRM 9', 'CRP 06/12345', 'CRO-SP 12.345']) {
+      preencher(c, { licenseNumber: ok });
+      expect(c.erro('licenseNumber')).toBeNull();
+    }
   });
 
   it('salvar cria, fecha o modal, mostra toast e recarrega a lista', async () => {
