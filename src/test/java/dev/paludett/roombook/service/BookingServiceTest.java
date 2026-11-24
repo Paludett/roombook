@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import dev.paludett.roombook.config.BookingProperties;
+import dev.paludett.roombook.domain.Booking;
 import dev.paludett.roombook.domain.Professional;
 import dev.paludett.roombook.domain.Room;
 import dev.paludett.roombook.domain.RoomStatus;
@@ -107,5 +108,47 @@ class BookingServiceTest {
 		assertThatThrownBy(() -> service.create(new BookingRequest(9L, 1L,
 				Instant.parse("2030-01-02T14:00:00Z"), Instant.parse("2030-01-02T15:00:00Z"), "x")))
 				.isInstanceOf(NotFoundException.class);
+	}
+
+	Booking booking(String startUtc) {
+		var entity = new Booking();
+		entity.setRoom(room);
+		entity.setProfessional(new Professional());
+		entity.setStartTime(Instant.parse(startUtc));
+		return entity;
+	}
+
+	@Test
+	void cancelsConfirmedBeforeStart() {
+		var b = booking("2030-01-02T14:00:00Z");
+		when(bookings.findById(5L)).thenReturn(Optional.of(b));
+		when(bookings.saveAndFlush(any())).thenAnswer(i -> i.getArgument(0));
+		assertThat(service.cancel(5L).status().name()).isEqualTo("CANCELLED");
+	}
+
+	@Test
+	void cancelRejectsAlreadyCancelledAndStarted() {
+		var started = booking("2030-01-01T12:00:00Z"); // início antes de "agora"
+		when(bookings.findById(5L)).thenReturn(Optional.of(started));
+		assertThatThrownBy(() -> service.cancel(5L)).isInstanceOf(BusinessRuleException.class)
+				.hasMessageContaining("iniciada");
+
+		var b = booking("2030-01-02T14:00:00Z");
+		b.cancel(NOW.instant());
+		when(bookings.findById(6L)).thenReturn(Optional.of(b));
+		assertThatThrownBy(() -> service.cancel(6L)).isInstanceOf(BusinessRuleException.class)
+				.hasMessageContaining("confirmadas");
+	}
+
+	@Test
+	void cancelStartingExactlyNowIsRejected() {
+		var b = booking("2030-01-01T13:00:00Z");
+		assertThatThrownBy(() -> b.cancel(NOW.instant())).isInstanceOf(BusinessRuleException.class);
+	}
+
+	@Test
+	void cancelMissingIs404() {
+		when(bookings.findById(99L)).thenReturn(Optional.empty());
+		assertThatThrownBy(() -> service.cancel(99L)).isInstanceOf(NotFoundException.class);
 	}
 }
