@@ -4,6 +4,9 @@ import dev.paludett.roombook.dto.BookingRequest;
 import dev.paludett.roombook.dto.BookingResponse;
 import dev.paludett.roombook.service.BookingService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +18,14 @@ public class BookingController {
 
 	public BookingController(BookingService service) {
 		this.service = service;
+	}
+
+	@GetMapping
+	public Page<BookingResponse> list(@RequestParam(required = false) Long roomId,
+			@RequestParam(required = false) Long professionalId, @RequestParam(required = false) String date,
+			@RequestParam(required = false) String status,
+			@PageableDefault(sort = "startTime") Pageable pageable) {
+		return service.list(roomId, professionalId, date, status, pageable);
 	}
 
 	@PostMapping
