@@ -1,5 +1,6 @@
 package dev.paludett.roombook.domain;
 
+import dev.paludett.roombook.exception.BusinessRuleException;
 import jakarta.persistence.*;
 import java.time.Instant;
 
@@ -55,7 +56,17 @@ public class Booking {
 	public String getPurpose() { return purpose; }
 	public void setPurpose(String purpose) { this.purpose = purpose; }
 	public BookingStatus getStatus() { return status; }
-	public void setStatus(BookingStatus status) { this.status = status; }
+
+	/** Único ponto de transição CONFIRMED -> CANCELLED. */
+	public void cancel(Instant now) {
+		if (status != BookingStatus.CONFIRMED) {
+			throw new BusinessRuleException("Só reservas confirmadas podem ser canceladas (status atual: " + status + ")");
+		}
+		if (!now.isBefore(startTime)) {
+			throw new BusinessRuleException("Não é possível cancelar uma reserva que já foi iniciada");
+		}
+		status = BookingStatus.CANCELLED;
+	}
 	public Instant getCreatedAt() { return createdAt; }
 	public Instant getUpdatedAt() { return updatedAt; }
 }
