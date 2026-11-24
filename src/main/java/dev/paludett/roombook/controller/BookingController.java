@@ -22,4 +22,9 @@ public class BookingController {
 	public BookingResponse create(@Valid @RequestBody BookingRequest req) {
 		return service.create(req);
 	}
+
+	@PatchMapping("/{id}/cancel")
+	public BookingResponse cancel(@PathVariable Long id) {
+		return service.cancel(id);
+	}
 }
