@@ -1,22 +1,27 @@
+/* Overlay não rola: só o corpo do painel rola; cabeçalho e rodapé ficam fixos. */
 .overlay {
   position: fixed;
   inset: 0;
   z-index: 30;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding: var(--space-7) var(--space-4);
-  overflow-y: auto;
+  padding: var(--space-5) var(--space-4);
   background: var(--scrim);
 }
 .panel {
+  display: flex;
+  flex-direction: column;
   width: 100%;
   max-width: 540px;
+  max-height: calc(100dvh - 2 * var(--space-5));
   background: var(--color-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-2);
+  overflow: hidden;
 }
 .panel-head {
+  flex: none;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -27,15 +32,21 @@
   margin: calc(var(--space-2) * -1) calc(var(--space-2) * -1) 0 0;
 }
 .panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: var(--space-2) var(--space-5) var(--space-4);
 }
 .panel-foot {
+  flex: none;
   display: flex;
   justify-content: flex-end;
   gap: var(--space-2);
   padding: var(--space-4) var(--space-5);
   border-top: 1px solid var(--color-border);
 }
+/* celular: folha inferior colada embaixo, largura total */
 @media (max-width: 640px) {
   .overlay {
     align-items: flex-end;
@@ -43,10 +54,18 @@
   }
   .panel {
     max-width: none;
+    max-height: calc(100dvh - var(--space-5));
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  .panel-head {
+    padding: var(--space-4) var(--space-4) var(--space-2);
+  }
+  .panel-body {
+    padding: var(--space-2) var(--space-4) var(--space-3);
   }
   .panel-foot {
     flex-direction: column-reverse;
+    padding: var(--space-3) var(--space-4);
   }
   .panel-foot > ::ng-deep .btn {
     width: 100%;
