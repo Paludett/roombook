@@ -1,0 +1,155 @@
+<div class="page-head">
+  <div>
+    <h1 class="h1">Profissionais</h1>
+    <p class="sub">Quem pode reservar salas.</p>
+  </div>
+  <button type="button" class="btn btn-primary" (click)="abrir()">
+    <app-icon name="plus" />Novo profissional
+  </button>
+</div>
+
+<div class="field busca">
+  <label class="label" for="pq">Buscar por nome ou especialidade</label>
+  <div class="with-ic">
+    <app-icon name="search" />
+    <input
+      id="pq"
+      class="input"
+      placeholder="Ex.: Ana, Cardiologia"
+      [value]="busca()"
+      (input)="buscar($any($event.target).value)"
+    />
+  </div>
+</div>
+
+@if (carregando()) {
+  <p class="loading" role="status">
+    <app-icon name="loader" [size]="18" />Carregando profissionais…
+  </p>
+  <div class="card skel-list" aria-hidden="true">
+    @for (i of esqueletos; track i) {
+      <div class="skel-row">
+        <span class="skel skel-av"></span><span class="skel skel-l1"></span
+        ><span class="skel skel-l2"></span>
+      </div>
+    }
+  </div>
+} @else if (falhou()) {
+  <div class="empty">
+    <span class="empty-ic"><app-icon name="alert" [size]="26" /></span>
+    <p class="h2 empty-title">Sem dados para mostrar</p>
+    <p class="sub">A lista aparece aqui assim que a conexão voltar.</p>
+    <button type="button" class="btn btn-secondary" (click)="carregar()">Tentar de novo</button>
+  </div>
+} @else if (lista().length === 0) {
+  <div class="empty">
+    <span class="empty-ic"><app-icon name="search-x" [size]="26" /></span>
+    @if (busca().trim()) {
+      <p class="h2 empty-title">Nenhum profissional encontrado</p>
+      <p class="sub">Confira a grafia ou busque por outra especialidade.</p>
+      <button type="button" class="btn btn-secondary" (click)="buscar('')">Limpar busca</button>
+    } @else {
+      <p class="h2 empty-title">Nenhum profissional cadastrado</p>
+      <p class="sub">Cadastre o primeiro para poder reservar salas.</p>
+      <button type="button" class="btn btn-primary" (click)="abrir()">Novo profissional</button>
+    }
+  </div>
+} @else {
+  <p class="count" role="status">{{ contagem() }}</p>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th scope="col">Nome</th>
+          <th scope="col">Especialidade</th>
+          <th scope="col">Registro</th>
+          <th scope="col">E-mail</th>
+          <th scope="col"><span class="sr-only">Ações</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of lista(); track p.id) {
+          <tr>
+            <td>
+              <span class="cell-flex"
+                ><span class="avatar" aria-hidden="true">{{ iniciais(p.name) }}</span
+                ><span class="strong">{{ p.name }}</span></span
+              >
+            </td>
+            <td>{{ p.specialty }}</td>
+            <td>{{ p.licenseNumber }}</td>
+            <td>{{ p.email }}</td>
+            <td class="act">
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                [attr.aria-label]="'Editar ' + p.name"
+                (click)="abrir(p)"
+              >
+                Editar
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <ul class="pcards">
+    @for (p of lista(); track p.id) {
+      <li class="card pcard">
+        <span class="avatar" aria-hidden="true">{{ iniciais(p.name) }}</span>
+        <span class="pinfo">
+          <span class="strong">{{ p.name }}</span>
+          <span class="sub">{{ p.specialty }} · {{ p.licenseNumber }}</span>
+          <span class="sub">{{ p.email }}</span>
+        </span>
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm"
+          [attr.aria-label]="'Editar ' + p.name"
+          (click)="abrir(p)"
+        >
+          Editar
+        </button>
+      </li>
+    }
+  </ul>
+}
+
+@if (aberto(); as alvo) {
+  <app-modal
+    [heading]="alvo === 'novo' ? 'Novo profissional' : 'Editar profissional'"
+    subtitle="Campos com * são obrigatórios."
+    (closed)="fechar()"
+  >
+    <form id="form-prof" class="form" [formGroup]="form" (ngSubmit)="salvar()" novalidate>
+      @for (c of campos; track c.k) {
+        <div class="field">
+          <label class="label" [for]="'f-' + c.k"
+            >{{ c.rotulo }} <span class="req" aria-hidden="true">*</span></label
+          >
+          <input
+            [id]="'f-' + c.k"
+            class="input"
+            [class.is-error]="erro(c.k)"
+            [formControlName]="c.k"
+            [type]="c.k === 'email' ? 'email' : 'text'"
+            [placeholder]="c.ph"
+            [attr.aria-invalid]="erro(c.k) ? 'true' : null"
+            [attr.aria-describedby]="erro(c.k) ? 'e-' + c.k : null"
+            (input)="limparServidor(c.k)"
+          />
+          @if (erro(c.k); as msg) {
+            <p class="err-msg" [id]="'e-' + c.k"><app-icon name="alert" [size]="14" />{{ msg }}</p>
+          }
+        </div>
+      }
+    </form>
+    <ng-container footer>
+      <button type="button" class="btn btn-secondary" (click)="fechar()">Cancelar</button>
+      <button type="submit" form="form-prof" class="btn btn-primary" [disabled]="salvando()">
+        {{ salvando() ? 'Salvando…' : 'Salvar profissional' }}
+      </button>
+    </ng-container>
+  </app-modal>
+}

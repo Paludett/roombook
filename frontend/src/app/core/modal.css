@@ -1,0 +1,54 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--space-7) var(--space-4);
+  overflow-y: auto;
+  background: var(--scrim);
+}
+.panel {
+  width: 100%;
+  max-width: 540px;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+}
+.panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-5) var(--space-3);
+}
+.panel-head .icon-btn {
+  margin: calc(var(--space-2) * -1) calc(var(--space-2) * -1) 0 0;
+}
+.panel-body {
+  padding: var(--space-2) var(--space-5) var(--space-4);
+}
+.panel-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+@media (max-width: 640px) {
+  .overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .panel {
+    max-width: none;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+  .panel-foot {
+    flex-direction: column-reverse;
+  }
+  .panel-foot > ::ng-deep .btn {
+    width: 100%;
+  }
+}
