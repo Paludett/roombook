@@ -1,0 +1,348 @@
+<a class="backlink" routerLink="/salas"><app-icon name="chevron-left" [size]="18" />Salas</a>
+
+<div class="room-head">
+  <div>
+    <h1 class="h1">{{ sala()?.name ?? 'Agenda da sala' }}</h1>
+    @if (sala(); as s) {
+      <div class="meta">
+        <span class="badge badge--neutral"
+          ><app-icon [name]="tipoIcon[s.type]" [size]="14" />{{ tipos[s.type] }}</span
+        >
+        <span class="badge badge--neutral"
+          ><app-icon name="pin" [size]="14" />{{ s.floorWing }}</span
+        >
+        <span class="badge" [class]="badge[s.status]"
+          ><app-icon [name]="statusIcon[s.status]" [size]="14" />{{ statuses[s.status] }}</span
+        >
+        <span class="badge badge--neutral">
+          <app-icon name="sparkles" [size]="14" />
+          {{
+            s.sanitizationMinutes
+              ? 'Higienização ' + s.sanitizationMinutes + ' min'
+              : 'Sem higienização'
+          }}
+        </span>
+      </div>
+      <p class="meta-m">{{ s.floorWing }} · higienização {{ s.sanitizationMinutes }} min</p>
+    }
+  </div>
+  <div class="datebar">
+    <button
+      type="button"
+      class="icon-btn bordered"
+      aria-label="Dia anterior"
+      (click)="deslocar(-1)"
+    >
+      <app-icon name="chevron-left" />
+    </button>
+    <button
+      type="button"
+      class="input date-btn"
+      aria-label="Escolher data"
+      (click)="escolherData(dp)"
+    >
+      <app-icon name="reservas" [size]="18" /><span class="so-desk">{{ dataBotao() }}</span
+      ><span class="so-mob">{{ dataBotaoCurta() }}</span>
+    </button>
+    <input
+      #dp
+      class="date-native"
+      type="date"
+      tabindex="-1"
+      aria-hidden="true"
+      [value]="data()"
+      (change)="mudarData(dp.value)"
+    />
+    <button type="button" class="icon-btn bordered" aria-label="Próximo dia" (click)="deslocar(1)">
+      <app-icon name="chevron-right" />
+    </button>
+  </div>
+</div>
+
+@if (salaFora()) {
+  <div class="banner banner--warn sala-aviso" role="status">
+    <app-icon name="alert" [size]="18" />
+    <p>
+      {{ sala()!.status === 'EM_MANUTENCAO' ? 'Sala em manutenção' : 'Sala inativa' }}: a agenda
+      está bloqueada para reservas.
+    </p>
+  </div>
+}
+
+<section class="card ag-card" aria-labelledby="ag-t">
+  <div class="ag-tools">
+    <div>
+      <h2 class="h2" id="ag-t">Agenda do dia</h2>
+      <p class="sub">Blocos de 30 min · selecione horários livres e toque em Reservar</p>
+    </div>
+    <ul class="legend" aria-label="Legenda da agenda">
+      <li class="legend-item">
+        <span class="blk blk--free sw-blk"><app-icon name="plus" [size]="14" /></span>Livre
+      </li>
+      <li class="legend-item">
+        <span class="blk blk--booked sw-blk"><app-icon name="profissionais" [size]="14" /></span
+        >Ocupado
+      </li>
+      <li class="legend-item">
+        <span class="blk blk--clean sw-blk"><app-icon name="sparkles" [size]="14" /></span
+        >Higienização
+      </li>
+      <li class="legend-item">
+        <span class="blk blk--unav sw-blk"><app-icon name="ban" [size]="14" /></span>Indisponível
+      </li>
+      <li class="legend-item">
+        <span class="blk blk--sel sw-blk"><app-icon name="check" [size]="14" /></span>Selecionado
+      </li>
+    </ul>
+  </div>
+
+  @if (resumoSel(); as r) {
+    <div class="selbar" role="status">
+      <p class="selbar-d">
+        <b>{{ r.faixa }} selecionado</b> · {{ r.dur }}
+        @if (r.ate) {
+          · a sala fica bloqueada até {{ r.ate }} pela higienização
+        }
+      </p>
+      <p class="selbar-m">
+        <span>Selecionado</span><b>{{ r.faixa }}</b>
+      </p>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" (click)="limpar()">Limpar seleção</button>
+        <button type="button" class="btn btn-primary" (click)="abrir()">
+          <app-icon name="check" [size]="18" /><span class="so-desk">Reservar horário</span
+          ><span class="so-mob">Reservar</span>
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (carregando()) {
+    <p class="loading" role="status"><app-icon name="loader" [size]="18" />Carregando agenda…</p>
+    <div class="timeline" aria-hidden="true">
+      @for (i of esqueletos; track i) {
+        <span class="skel skel-slot"></span>
+      }
+    </div>
+  } @else if (falhou()) {
+    <div class="empty">
+      <span class="empty-ic"><app-icon name="alert" [size]="26" /></span>
+      <p class="h2">Sem dados para mostrar</p>
+      <p class="sub">A agenda aparece aqui assim que a conexão voltar.</p>
+      <button type="button" class="btn btn-secondary" (click)="carregar()">Tentar de novo</button>
+    </div>
+  } @else if (blocks().length === 0) {
+    <div class="empty">
+      <span class="empty-ic"><app-icon name="search-x" [size]="26" /></span>
+      <p class="h2">Sem horários neste dia</p>
+    </div>
+  } @else {
+    <div class="tl-cols">
+      @for (col of colunas(); track col.legenda) {
+        <div>
+          <p class="tl-cap">{{ col.legenda }}</p>
+          <div class="timeline">
+            @for (l of col.linhas; track l.start) {
+              <div class="slot">
+                <span class="rule">
+                  @for (s of l.starts; track s) {
+                    <span class="slot-time" [class.is-hour]="hora(s).endsWith(':00')">{{
+                      hora(s)
+                    }}</span>
+                  }
+                </span>
+                @switch (l.tipo) {
+                  @case ('free') {
+                    <button
+                      type="button"
+                      class="blk"
+                      [class.blk--free]="!selecionada(l)"
+                      [class.blk--sel]="selecionada(l)"
+                      [attr.aria-pressed]="selecionada(l)"
+                      [attr.aria-label]="
+                        (selecionada(l) ? 'Selecionado ' : 'Livre ') + hora(l.start)
+                      "
+                      (click)="alternar(l)"
+                    >
+                      <app-icon [name]="selecionada(l) ? 'check' : 'plus'" [size]="16" />
+                      <span class="blk-txt">{{ selecionada(l) ? 'Selecionado' : 'Livre' }}</span>
+                    </button>
+                  }
+                  @case ('booked') {
+                    <div class="blk blk--booked" [style.--n]="l.n">
+                      <app-icon name="profissionais" [size]="16" />
+                      <span class="blk-txt">
+                        <span class="blk-main">{{
+                          l.booking?.professionalName ?? 'Reservado'
+                        }}</span>
+                        <span class="blk-sub">
+                          {{ l.booking ? l.booking.purpose + ' · ' : '' }}{{ hora(l.start) }}–{{
+                            hora(l.end)
+                          }}
+                        </span>
+                      </span>
+                    </div>
+                  }
+                  @case ('clean') {
+                    <div class="blk blk--clean" [style.--n]="l.n">
+                      <app-icon name="sparkles" [size]="16" />
+                      <span class="blk-txt">
+                        <span class="blk-main">Higienização</span>
+                        <span class="blk-sub"
+                          >até {{ hora(l.end) }} · {{ hora(l.start) }}–{{ hora(l.end) }}</span
+                        >
+                      </span>
+                    </div>
+                  }
+                  @default {
+                    <div class="blk blk--unav" [style.--n]="l.n">
+                      <app-icon name="ban" [size]="16" />
+                      <span class="blk-txt">
+                        <span class="blk-main">Indisponível</span>
+                        <span class="blk-sub">
+                          {{ salaFora() ? 'Sala sem reservas' : 'Horário já passou' }} ·
+                          {{ hora(l.start) }}–{{ hora(l.end) }}
+                        </span>
+                      </span>
+                    </div>
+                  }
+                }
+              </div>
+              @if (agoraEm(l)) {
+                <div class="now" [attr.aria-label]="'Agora, ' + hora(l.start)">
+                  <span>{{ agoraHora() }}</span>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>
+
+@if (aberto()) {
+  <app-modal
+    heading="Nova reserva"
+    [subtitle]="(sala()?.name ?? '') + ' · ' + dataLabel()"
+    (closed)="fechar()"
+  >
+    @if (erroModal(); as msg) {
+      <div class="banner" role="alert">
+        <app-icon name="alert" [size]="18" />
+        <p><b>Não foi possível salvar.</b> {{ msg }}</p>
+        <button
+          type="button"
+          class="icon-btn"
+          aria-label="Fechar aviso"
+          (click)="erroModal.set(null)"
+        >
+          <app-icon name="x" [size]="18" />
+        </button>
+      </div>
+    }
+    <form id="form-reserva" [formGroup]="form" (ngSubmit)="reservar()" novalidate class="form">
+      <div class="field">
+        <label class="label" for="prof"
+          >Profissional <span class="req" aria-hidden="true">*</span></label
+        >
+        <div class="sel">
+          <select
+            id="prof"
+            class="select"
+            formControlName="professionalId"
+            [class.is-error]="invalido('professionalId')"
+            [attr.aria-invalid]="invalido('professionalId')"
+          >
+            <option [ngValue]="null">Selecione…</option>
+            @for (p of profissionais(); track p.id) {
+              <option [ngValue]="p.id">{{ p.name }} · {{ p.specialty }}</option>
+            }
+          </select>
+          <app-icon name="chevron-down" />
+        </div>
+        @if (invalido('professionalId')) {
+          <p class="err-msg">
+            <app-icon name="alert" [size]="14" />{{ mensagem('professionalId') }}
+          </p>
+        }
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label class="label" for="ini">Início</label>
+          <div class="sel">
+            <select
+              id="ini"
+              class="select"
+              formControlName="inicio"
+              [class.is-error]="invalido('inicio')"
+            >
+              @for (b of corrida(); track b.start) {
+                <option [value]="b.start">{{ hora(b.start) }}</option>
+              }
+            </select>
+            <app-icon name="chevron-down" />
+          </div>
+          @if (invalido('inicio')) {
+            <p class="err-msg"><app-icon name="alert" [size]="14" />{{ mensagem('inicio') }}</p>
+          }
+        </div>
+        <div class="field">
+          <label class="label" for="fim">Fim</label>
+          <div class="sel">
+            <select
+              id="fim"
+              class="select"
+              formControlName="fim"
+              [class.is-error]="invalido('fim')"
+            >
+              @for (b of corrida(); track b.end) {
+                <option [value]="b.end">{{ hora(b.end) }}</option>
+              }
+            </select>
+            <app-icon name="chevron-down" />
+          </div>
+          @if (invalido('fim')) {
+            <p class="err-msg"><app-icon name="alert" [size]="14" />{{ mensagem('fim') }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label" for="fin"
+          >Finalidade <span class="req" aria-hidden="true">*</span></label
+        >
+        <input
+          id="fin"
+          class="input"
+          formControlName="purpose"
+          maxlength="255"
+          [class.is-error]="invalido('purpose')"
+          [attr.aria-invalid]="invalido('purpose')"
+        />
+        @if (invalido('purpose')) {
+          <p class="err-msg"><app-icon name="alert" [size]="14" />{{ mensagem('purpose') }}</p>
+        }
+      </div>
+
+      @if (noteAte(); as ate) {
+        <div class="note">
+          <app-icon name="sparkles" [size]="18" />
+          <p>
+            A sala ficará bloqueada até <b>{{ ate }}</b> (fim +
+            {{ sala()?.sanitizationMinutes }} min de higienização).
+          </p>
+        </div>
+      }
+    </form>
+    <ng-container footer>
+      <button type="button" class="btn btn-secondary" (click)="fechar()">Cancelar</button>
+      <button type="submit" form="form-reserva" class="btn btn-primary" [disabled]="enviando()">
+        <app-icon [name]="enviando() ? 'loader' : 'check'" [size]="18" />{{
+          enviando() ? 'Reservando…' : rotuloReservar()
+        }}
+      </button>
+    </ng-container>
+  </app-modal>
+}

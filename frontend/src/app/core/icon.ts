@@ -23,6 +23,7 @@ const ICONS = {
   x: ['M18 6 6 18', 'm6 6 12 12'],
   loader: ['M21 12a9 9 0 1 1-6.22-8.56'],
   'search-x': ['M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0', 'm21 21-4.3-4.3', 'm13.5 8.5-5 5', 'm8.5 8.5 5 5'],
+  'chevron-left': ['m15 18-6-6 6-6'],
 } as const;
 
 export type IconName = keyof typeof ICONS;

@@ -42,6 +42,8 @@ export interface BookingResponse extends BookingRequest {
   id: number;
   blockedUntil: string;
   status: BookingStatus;
+  roomName: string;
+  professionalName: string;
 }
 
 export interface ProblemDetail {
@@ -51,4 +53,20 @@ export interface ProblemDetail {
   detail?: string;
   instance?: string;
   errors?: { field: string; message: string }[];
+}
+
+export type BlockState = 'FREE' | 'BOOKED' | 'CLEANING' | 'UNAVAILABLE';
+export interface AvailabilityBlock {
+  start: string;
+  end: string;
+  state: BlockState;
+}
+export interface AvailabilityResponse {
+  roomId: number;
+  date: string;
+  blocks: AvailabilityBlock[];
+}
+export interface Page<T> {
+  content: T[];
+  page: { size: number; number: number; totalElements: number; totalPages: number };
 }
