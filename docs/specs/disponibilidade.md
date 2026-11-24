@@ -1,7 +1,7 @@
 # Spec: Disponibilidade da sala
 
 - **Issue:** #11
-- **Status:** rascunho
+- **Status:** implementada
 
 ## Contexto
 A tela de agenda precisa saber, para uma sala e um dia, quais blocos de 30 minutos estão livres. `GET /rooms/{id}/availability?date=AAAA-MM-DD`.
@@ -16,10 +16,10 @@ A tela de agenda precisa saber, para uma sala e um dia, quais blocos de 30 minut
 - Sala inexistente: 404 (ProblemDetail). `date` ausente ou inválida: 400.
 
 ## Critérios de aceite
-- [ ] Lista os blocos de 30 min do horário de funcionamento como livre, ocupado ou higienização
-- [ ] Usa uma única consulta para as reservas do dia
-- [ ] Sala em manutenção ou inativa retorna todos os blocos indisponíveis
-- [ ] Horários já passados aparecem como indisponíveis quando a data é hoje
+- [x] Lista os blocos de 30 min do horário de funcionamento como livre, ocupado ou higienização
+- [x] Usa uma única consulta para as reservas do dia
+- [x] Sala em manutenção ou inativa retorna todos os blocos indisponíveis
+- [x] Horários já passados aparecem como indisponíveis quando a data é hoje
 
 ## Fora de escopo
 - Disponibilidade de várias salas numa só chamada.
