@@ -1,0 +1,222 @@
+<div class="page-head">
+  <div>
+    <h1 class="h1">Reservas</h1>
+    <p class="sub">Só é possível cancelar reservas confirmadas que ainda não começaram.</p>
+  </div>
+</div>
+
+<button
+  type="button"
+  class="btn btn-secondary filtros-toggle"
+  [attr.aria-expanded]="filtrosAbertos()"
+  (click)="filtrosAbertos.set(!filtrosAbertos())"
+>
+  <app-icon name="chevron-down" />Filtros{{ nFiltros() ? ' · ' + nFiltros() : '' }}
+</button>
+<div class="card filtros" [class.aberto]="filtrosAbertos()">
+  <div class="field">
+    <label class="label" for="f-sala">Sala</label>
+    <div class="sel">
+      <select
+        id="f-sala"
+        class="select"
+        [value]="salaId()"
+        (change)="filtrar('sala', $any($event.target).value)"
+      >
+        <option value="0">Todas as salas</option>
+        @for (s of salas(); track s.id) {
+          <option [value]="s.id" [selected]="s.id === salaId()">{{ s.name }}</option>
+        }
+      </select>
+      <app-icon name="chevron-down" />
+    </div>
+  </div>
+  <div class="field">
+    <label class="label" for="f-prof">Profissional</label>
+    <div class="sel">
+      <select
+        id="f-prof"
+        class="select"
+        [value]="profId()"
+        (change)="filtrar('prof', $any($event.target).value)"
+      >
+        <option value="0">Todos</option>
+        @for (p of profissionais(); track p.id) {
+          <option [value]="p.id" [selected]="p.id === profId()">{{ p.name }}</option>
+        }
+      </select>
+      <app-icon name="chevron-down" />
+    </div>
+  </div>
+  <div class="field">
+    <label class="label" for="f-data">Data</label>
+    <input
+      id="f-data"
+      type="date"
+      class="input"
+      [value]="data()"
+      (change)="filtrar('data', $any($event.target).value)"
+    />
+  </div>
+  <div class="fgroup">
+    <span class="label">Status</span>
+    <div class="chips" role="group" aria-label="Filtrar por status">
+      @for (s of statuses; track s.v) {
+        <button
+          type="button"
+          class="chip"
+          [attr.aria-pressed]="status() === s.v"
+          (click)="filtrar('status', s.v)"
+        >
+          @if (s.v === 'CONFIRMED') {
+            <app-icon name="check" [size]="16" />
+          }
+          @if (s.v === 'CANCELLED') {
+            <app-icon name="x" [size]="16" />
+          }
+          {{ s.r }}
+        </button>
+      }
+    </div>
+  </div>
+</div>
+
+@if (carregando()) {
+  <p class="loading" role="status"><app-icon name="loader" [size]="18" />Carregando reservas…</p>
+  <div class="card skel-list" aria-hidden="true">
+    @for (i of esqueletos; track i) {
+      <div class="skel-row">
+        <span class="skel skel-l1"></span><span class="skel skel-l2"></span
+        ><span class="skel skel-l3"></span>
+      </div>
+    }
+  </div>
+} @else if (falhou()) {
+  <div class="empty">
+    <span class="empty-ic"><app-icon name="alert" [size]="26" /></span>
+    <p class="h2 empty-title">Sem dados para mostrar</p>
+    <p class="sub">A lista aparece aqui assim que a conexão voltar.</p>
+    <button type="button" class="btn btn-secondary" (click)="carregar()">Tentar de novo</button>
+  </div>
+} @else if (itens().length === 0) {
+  <div class="empty">
+    <span class="empty-ic"><app-icon name="search-x" [size]="26" /></span>
+    <p class="h2 empty-title">Nenhuma reserva encontrada</p>
+    @if (nFiltros()) {
+      <p class="sub">Nenhuma reserva com esses filtros.</p>
+      <button type="button" class="btn btn-secondary" (click)="limpar()">Limpar filtros</button>
+    } @else {
+      <p class="sub">As reservas feitas na agenda aparecem aqui.</p>
+    }
+  </div>
+} @else {
+  <p class="count" role="status">{{ contagem() }}</p>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th scope="col">Sala</th>
+          <th scope="col">Profissional</th>
+          <th scope="col">Data</th>
+          <th scope="col">Horário</th>
+          <th scope="col">Finalidade</th>
+          <th scope="col">Status</th>
+          <th scope="col"><span class="sr-only">Ações</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of itens(); track r.id) {
+          <tr [class.riscada]="r.status === 'CANCELLED'">
+            <td class="strong">{{ r.roomName }}</td>
+            <td>{{ r.professionalName }}</td>
+            <td>{{ dia(r) }}</td>
+            <td>{{ horario(r) }}</td>
+            <td>{{ r.purpose }}</td>
+            <td>
+              @if (r.status === 'CONFIRMED') {
+                <span class="badge badge--ok"><app-icon name="check" [size]="14" />Confirmada</span>
+              } @else {
+                <span class="badge badge--neutral"><app-icon name="x" [size]="14" />Cancelada</span>
+              }
+            </td>
+            <td class="act">
+              @if (podeCancelar(r)) {
+                <button type="button" class="btn btn-secondary btn-sm" (click)="pedir(r)">
+                  <app-icon name="x" [size]="16" />Cancelar
+                </button>
+              } @else {
+                <span class="sub">{{ motivo(r) }}</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <ul class="rcards">
+    @for (r of itens(); track r.id) {
+      <li class="card rcard" [class.riscada]="r.status === 'CANCELLED'">
+        <div class="rtop">
+          <span class="rhora">{{ horario(r) }}</span>
+          @if (r.status === 'CONFIRMED') {
+            <span class="badge badge--ok"><app-icon name="check" [size]="14" />Confirmada</span>
+          } @else {
+            <span class="badge badge--neutral"><app-icon name="x" [size]="14" />Cancelada</span>
+          }
+        </div>
+        <p class="strong">{{ r.roomName }}</p>
+        <p class="sub">{{ diaCurto(r) }} · {{ r.professionalName }} · {{ r.purpose }}</p>
+        @if (podeCancelar(r)) {
+          <button type="button" class="btn btn-secondary btn-sm" (click)="pedir(r)">
+            <app-icon name="x" [size]="16" />Cancelar reserva
+          </button>
+        } @else {
+          <p class="sub">{{ motivo(r) }}</p>
+        }
+      </li>
+    }
+  </ul>
+  @if (totalPaginas() > 1) {
+    <nav class="pager" aria-label="Paginação">
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        [disabled]="pagina() === 0"
+        (click)="ir(pagina() - 1)"
+      >
+        <app-icon name="chevron-left" [size]="16" />Anterior
+      </button>
+      <span class="sub">Página {{ pagina() + 1 }} de {{ totalPaginas() }}</span>
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        [disabled]="pagina() + 1 >= totalPaginas()"
+        (click)="ir(pagina() + 1)"
+      >
+        Próxima<app-icon name="chevron-right" [size]="16" />
+      </button>
+    </nav>
+  }
+}
+
+@if (alvo(); as r) {
+  <app-modal
+    [heading]="'Cancelar a reserva de ' + horario(r) + ' em ' + r.roomName + '?'"
+    [subtitle]="
+      r.professionalName +
+      ' · ' +
+      diaCurto(r) +
+      ' · ' +
+      r.purpose +
+      '. O horário volta a ficar livre na agenda. Essa ação não pode ser desfeita.'
+    "
+    (closed)="fechar()"
+  >
+    <ng-container footer>
+      <button type="button" class="btn btn-secondary" (click)="fechar()">Manter reserva</button>
+      <button type="button" class="btn btn-danger" [disabled]="cancelando()" (click)="confirmar()">
+        <app-icon name="x" [size]="16" />{{ cancelando() ? 'Cancelando…' : 'Cancelar reserva' }}
+      </button>
+    </ng-container>
+  </app-modal>
+}
