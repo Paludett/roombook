@@ -222,145 +222,127 @@
 </section>
 
 @if (aberto()) {
-  <div class="overlay" (click)="fechar()">
-    <section
-      class="panel modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="nr"
-      (click)="$event.stopPropagation()"
-      (keydown.escape)="fechar()"
-    >
-      <span class="handle" aria-hidden="true"></span>
-      <div class="panel-head">
-        <div>
-          <h2 class="h2" id="nr">Nova reserva</h2>
-          <p class="sub">{{ sala()?.name }} · {{ dataLabel() }}</p>
-        </div>
-        <button type="button" class="icon-btn" aria-label="Fechar formulário" (click)="fechar()">
-          <app-icon name="x" />
+  <app-modal
+    heading="Nova reserva"
+    [subtitle]="(sala()?.name ?? '') + ' · ' + dataLabel()"
+    (closed)="fechar()"
+  >
+    @if (erroModal(); as msg) {
+      <div class="banner" role="alert">
+        <app-icon name="alert" [size]="18" />
+        <p><b>Não foi possível salvar.</b> {{ msg }}</p>
+        <button
+          type="button"
+          class="icon-btn"
+          aria-label="Fechar aviso"
+          (click)="erroModal.set(null)"
+        >
+          <app-icon name="x" [size]="18" />
         </button>
       </div>
-
-      @if (erroModal(); as msg) {
-        <div class="banner" role="alert">
-          <app-icon name="alert" [size]="18" />
-          <p><b>Não foi possível salvar.</b> {{ msg }}</p>
-          <button
-            type="button"
-            class="icon-btn"
-            aria-label="Fechar aviso"
-            (click)="erroModal.set(null)"
+    }
+    <form id="form-reserva" [formGroup]="form" (ngSubmit)="reservar()" novalidate class="form">
+      <div class="field">
+        <label class="label" for="prof"
+          >Profissional <span class="req" aria-hidden="true">*</span></label
+        >
+        <div class="sel">
+          <select
+            id="prof"
+            class="select"
+            formControlName="professionalId"
+            [class.is-error]="invalido('professionalId')"
+            [attr.aria-invalid]="invalido('professionalId')"
           >
-            <app-icon name="x" [size]="18" />
-          </button>
+            <option [ngValue]="null">Selecione…</option>
+            @for (p of profissionais(); track p.id) {
+              <option [ngValue]="p.id">{{ p.name }} · {{ p.specialty }}</option>
+            }
+          </select>
+          <app-icon name="chevron-down" />
         </div>
-      }
+        @if (invalido('professionalId')) {
+          <p class="err-msg">
+            <app-icon name="alert" [size]="14" />{{ mensagem('professionalId') }}
+          </p>
+        }
+      </div>
 
-      <form [formGroup]="form" (ngSubmit)="reservar()" novalidate class="form">
+      <div class="row2">
         <div class="field">
-          <label class="label" for="prof"
-            >Profissional <span class="req" aria-hidden="true">*</span></label
-          >
+          <label class="label" for="ini">Início</label>
           <div class="sel">
             <select
-              id="prof"
+              id="ini"
               class="select"
-              formControlName="professionalId"
-              [class.is-error]="invalido('professionalId')"
-              [attr.aria-invalid]="invalido('professionalId')"
+              formControlName="inicio"
+              [class.is-error]="invalido('inicio')"
             >
-              <option [ngValue]="null">Selecione…</option>
-              @for (p of profissionais(); track p.id) {
-                <option [ngValue]="p.id">{{ p.name }} · {{ p.specialty }}</option>
+              @for (b of corrida(); track b.start) {
+                <option [value]="b.start">{{ hora(b.start) }}</option>
               }
             </select>
             <app-icon name="chevron-down" />
           </div>
-          @if (invalido('professionalId')) {
-            <p class="err-msg">
-              <app-icon name="alert" [size]="14" />{{ mensagem('professionalId') }}
-            </p>
+          @if (invalido('inicio')) {
+            <p class="err-msg"><app-icon name="alert" [size]="14" />{{ mensagem('inicio') }}</p>
           }
         </div>
-
-        <div class="row2">
-          <div class="field">
-            <label class="label" for="ini">Início</label>
-            <div class="sel">
-              <select
-                id="ini"
-                class="select"
-                formControlName="inicio"
-                [class.is-error]="invalido('inicio')"
-              >
-                @for (b of corrida(); track b.start) {
-                  <option [value]="b.start">{{ hora(b.start) }}</option>
-                }
-              </select>
-              <app-icon name="chevron-down" />
-            </div>
-            @if (invalido('inicio')) {
-              <p class="err-msg"><app-icon name="alert" [size]="14" />{{ mensagem('inicio') }}</p>
-            }
-          </div>
-          <div class="field">
-            <label class="label" for="fim">Fim</label>
-            <div class="sel">
-              <select
-                id="fim"
-                class="select"
-                formControlName="fim"
-                [class.is-error]="invalido('fim')"
-              >
-                @for (b of corrida(); track b.end) {
-                  <option [value]="b.end">{{ hora(b.end) }}</option>
-                }
-              </select>
-              <app-icon name="chevron-down" />
-            </div>
-            @if (invalido('fim')) {
-              <p class="err-msg"><app-icon name="alert" [size]="14" />{{ mensagem('fim') }}</p>
-            }
-          </div>
-        </div>
-
         <div class="field">
-          <label class="label" for="fin"
-            >Finalidade <span class="req" aria-hidden="true">*</span></label
-          >
-          <input
-            id="fin"
-            class="input"
-            formControlName="purpose"
-            maxlength="255"
-            [class.is-error]="invalido('purpose')"
-            [attr.aria-invalid]="invalido('purpose')"
-          />
-          @if (invalido('purpose')) {
-            <p class="err-msg"><app-icon name="alert" [size]="14" />{{ mensagem('purpose') }}</p>
+          <label class="label" for="fim">Fim</label>
+          <div class="sel">
+            <select
+              id="fim"
+              class="select"
+              formControlName="fim"
+              [class.is-error]="invalido('fim')"
+            >
+              @for (b of corrida(); track b.end) {
+                <option [value]="b.end">{{ hora(b.end) }}</option>
+              }
+            </select>
+            <app-icon name="chevron-down" />
+          </div>
+          @if (invalido('fim')) {
+            <p class="err-msg"><app-icon name="alert" [size]="14" />{{ mensagem('fim') }}</p>
           }
         </div>
+      </div>
 
-        @if (noteAte(); as ate) {
-          <div class="note">
-            <app-icon name="sparkles" [size]="18" />
-            <p>
-              A sala ficará bloqueada até <b>{{ ate }}</b> (fim +
-              {{ sala()?.sanitizationMinutes }} min de higienização).
-            </p>
-          </div>
+      <div class="field">
+        <label class="label" for="fin"
+          >Finalidade <span class="req" aria-hidden="true">*</span></label
+        >
+        <input
+          id="fin"
+          class="input"
+          formControlName="purpose"
+          maxlength="255"
+          [class.is-error]="invalido('purpose')"
+          [attr.aria-invalid]="invalido('purpose')"
+        />
+        @if (invalido('purpose')) {
+          <p class="err-msg"><app-icon name="alert" [size]="14" />{{ mensagem('purpose') }}</p>
         }
+      </div>
 
-        <div class="actions">
-          <button type="button" class="btn btn-secondary" (click)="fechar()">Cancelar</button>
-          <button type="submit" class="btn btn-primary" [disabled]="enviando()">
-            <app-icon [name]="enviando() ? 'loader' : 'check'" [size]="18" />{{
-              enviando() ? 'Reservando…' : rotuloReservar()
-            }}
-          </button>
+      @if (noteAte(); as ate) {
+        <div class="note">
+          <app-icon name="sparkles" [size]="18" />
+          <p>
+            A sala ficará bloqueada até <b>{{ ate }}</b> (fim +
+            {{ sala()?.sanitizationMinutes }} min de higienização).
+          </p>
         </div>
-      </form>
-    </section>
-  </div>
+      }
+    </form>
+    <ng-container footer>
+      <button type="button" class="btn btn-secondary" (click)="fechar()">Cancelar</button>
+      <button type="submit" form="form-reserva" class="btn btn-primary" [disabled]="enviando()">
+        <app-icon [name]="enviando() ? 'loader' : 'check'" [size]="18" />{{
+          enviando() ? 'Reservando…' : rotuloReservar()
+        }}
+      </button>
+    </ng-container>
+  </app-modal>
 }
