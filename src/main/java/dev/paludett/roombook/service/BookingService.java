@@ -2,6 +2,7 @@ package dev.paludett.roombook.service;
 
 import dev.paludett.roombook.config.BookingProperties;
 import dev.paludett.roombook.domain.Booking;
+import dev.paludett.roombook.domain.BookingStatus;
 import dev.paludett.roombook.domain.Room;
 import dev.paludett.roombook.domain.RoomStatus;
 import dev.paludett.roombook.dto.BookingRequest;
@@ -12,12 +13,18 @@ import dev.paludett.roombook.exception.NotFoundException;
 import dev.paludett.roombook.repository.BookingRepository;
 import dev.paludett.roombook.repository.ProfessionalRepository;
 import dev.paludett.roombook.repository.RoomRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.Set;
 import java.time.ZonedDateTime;
 
 @Service
@@ -71,6 +78,55 @@ public class BookingService {
 		b.setBlockedUntil(blockedUntil);
 		b.setPurpose(purpose);
 		return BookingResponse.from(bookings.save(b));
+	}
+
+	/** Propriedades aceitas em sort (qualquer outra vira 400 em vez de 500). */
+	private static final Set<String> SORTABLE = Set.of("id", "startTime", "endTime", "status", "createdAt");
+
+	@Transactional(readOnly = true)
+	public Page<BookingResponse> list(Long roomId, Long professionalId, String date, String status,
+			Pageable pageable) {
+		pageable.getSort().forEach(o -> {
+			if (!SORTABLE.contains(o.getProperty())) {
+				throw new InvalidRequestException("Campo de ordenação inválido: '" + o.getProperty()
+						+ "' (use " + String.join(", ", SORTABLE.stream().sorted().toList()) + ")");
+			}
+		});
+		Specification<Booking> spec = (r, q, cb) -> cb.conjunction();
+		if (roomId != null) {
+			spec = spec.and((r, q, cb) -> cb.equal(r.get("room").get("id"), roomId));
+		}
+		if (professionalId != null) {
+			spec = spec.and((r, q, cb) -> cb.equal(r.get("professional").get("id"), professionalId));
+		}
+		if (date != null && !date.isBlank()) {
+			LocalDate day = parseDate(date);
+			Instant from = day.atStartOfDay(props.zone()).toInstant();
+			Instant to = day.plusDays(1).atStartOfDay(props.zone()).toInstant();
+			spec = spec.and((r, q, cb) -> cb.and(cb.greaterThanOrEqualTo(r.<Instant>get("startTime"), from),
+					cb.lessThan(r.<Instant>get("startTime"), to)));
+		}
+		if (status != null && !status.isBlank()) {
+			BookingStatus st = parseStatus(status);
+			spec = spec.and((r, q, cb) -> cb.equal(r.get("status"), st));
+		}
+		return bookings.findAll(spec, pageable).map(BookingResponse::from);
+	}
+
+	private static LocalDate parseDate(String date) {
+		try {
+			return LocalDate.parse(date.trim());
+		} catch (DateTimeParseException ex) {
+			throw new InvalidRequestException("Data inválida: '" + date + "' (use AAAA-MM-DD)");
+		}
+	}
+
+	private static BookingStatus parseStatus(String status) {
+		try {
+			return BookingStatus.valueOf(status.trim().toUpperCase());
+		} catch (IllegalArgumentException ex) {
+			throw new InvalidRequestException("Status inválido: '" + status + "' (use CONFIRMED ou CANCELLED)");
+		}
 	}
 
 	public BookingResponse cancel(Long id) {
