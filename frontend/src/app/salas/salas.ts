@@ -1,21 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { RoomResponse, RoomStatus, RoomType } from '../core/api.models';
-import { Icon, IconName } from '../core/icon';
+import { Icon } from '../core/icon';
 import { RoomService } from '../core/room.service';
-import { STATUS, TIPOS } from './rotulos';
+import { STATUS, STATUS_ICON, TIPO_ICON, TIPOS } from './rotulos';
 
-const TIPO_ICON: Record<RoomType, IconName> = {
-  CONSULTORIO: 'consultorio',
-  SALA_EXAME: 'exame',
-  SALA_PROCEDIMENTO: 'procedimento',
-  SALA_REUNIAO: 'reuniao',
-};
-const STATUS_ICON: Record<RoomStatus, IconName> = {
-  ATIVA: 'check',
-  EM_MANUTENCAO: 'wrench',
-  INATIVA: 'ban',
-};
 const BADGE: Record<RoomStatus, string> = {
   ATIVA: 'badge--ok',
   EM_MANUTENCAO: 'badge--warn',
