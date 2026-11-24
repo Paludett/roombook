@@ -80,7 +80,7 @@ export class Profissionais {
     this.carregando.set(true);
     this.falhou.set(false);
     const done = (l: ProfessionalResponse[]) => {
-      this.lista.set(l);
+      this.lista.set([...l].sort((x, y) => x.name.localeCompare(y.name, 'pt-BR')));
       this.carregando.set(false);
     };
     const fail = () => {
@@ -95,7 +95,7 @@ export class Profissionais {
     let porNome: ProfessionalResponse[] | null = null;
     const juntar = (a: ProfessionalResponse[], b: ProfessionalResponse[]) => {
       const m = new Map([...a, ...b].map((p) => [p.id, p]));
-      done([...m.values()].sort((x, y) => x.name.localeCompare(y.name, 'pt-BR')));
+      done([...m.values()]);
     };
     this.api.list({ name: q }).subscribe({
       next: (a) => {
