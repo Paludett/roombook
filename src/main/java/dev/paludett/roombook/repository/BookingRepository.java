@@ -14,4 +14,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 			and b.startTime < :blockedUntil and b.blockedUntil > :start""")
 	boolean existsOverlap(@Param("roomId") Long roomId, @Param("start") Instant start,
 			@Param("blockedUntil") Instant blockedUntil);
+
+	/** Reservas não canceladas da sala cujo bloqueio (reserva + higienização) toca a janela. */
+	@Query("""
+			select b from Booking b
+			where b.room.id = :roomId and b.status <> dev.paludett.roombook.domain.BookingStatus.CANCELLED
+			and b.startTime < :to and b.blockedUntil > :from""")
+	java.util.List<Booking> findActiveInWindow(@Param("roomId") Long roomId, @Param("from") Instant from,
+			@Param("to") Instant to);
 }
