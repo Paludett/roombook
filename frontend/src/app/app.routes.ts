@@ -4,4 +4,8 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'salas' },
   { path: 'salas', loadComponent: () => import('./salas/salas').then((m) => m.Salas) },
   { path: 'reservas', loadComponent: () => import('./reservas/reservas').then((m) => m.Reservas) },
+  {
+    path: 'salas/:id/agenda',
+    loadComponent: () => import('./salas/agenda-placeholder').then((m) => m.AgendaPlaceholder),
+  },
 ];
