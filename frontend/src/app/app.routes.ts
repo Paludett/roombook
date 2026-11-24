@@ -10,6 +10,6 @@ export const routes: Routes = [
   },
   {
     path: 'salas/:id/agenda',
-    loadComponent: () => import('./salas/agenda-placeholder').then((m) => m.AgendaPlaceholder),
+    loadComponent: () => import('./salas/agenda').then((m) => m.Agenda),
   },
 ];
