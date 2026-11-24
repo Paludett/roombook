@@ -1,61 +1,186 @@
-.filtros {
+/* Só tokens e classes base: nenhuma cor solta aqui. */
+.rooms {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+  gap: var(--space-4);
+}
+.status-select {
+  display: none;
+}
+
+.room {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  height: 100%;
+  padding: var(--card-pad);
+  color: var(--color-text);
+  text-decoration: none;
+}
+.room:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+.room-top {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.room-id {
+  flex: 1;
+  min-width: 0;
+}
+.room-ic {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  flex: none;
+}
+.room-name {
+  display: block;
+  font-family: var(--font-head);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  line-height: 1.25;
+}
+.room-type {
+  display: block;
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+}
+.room-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
 }
-.filtros label {
+.room-meta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.room-alert {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--color-warning-fg);
+}
+.room-alert.muted {
+  color: var(--color-text-muted);
+}
+.room-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+.room-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.room--maint {
+  background: var(--color-warning-soft);
+  border: 2px solid var(--color-warning);
+}
+.room--maint .room-ic {
+  background: var(--color-warning);
+  color: var(--color-on-warning);
+}
+.room--maint .room-cta {
+  color: var(--color-warning-fg);
+}
+.room--maint .room-foot {
+  border-color: var(--color-warning);
+}
+.room--inactive {
+  background: var(--color-surface-2);
+  border: 1px dashed var(--color-border-strong);
+  box-shadow: none;
+  color: var(--color-text-muted);
+}
+.room--inactive .room-ic {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+}
+.room--inactive .room-cta {
+  color: var(--color-text-muted);
+}
+
+/* esqueleto de carregamento */
+.skel-top {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+.skel-ic {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+}
+.skel-lines {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.875rem;
-  flex: 1 1 10rem;
+  gap: var(--space-2);
 }
-.filtros select {
-  padding: 0.5rem;
-  font-size: 1rem;
+.skel-name {
+  width: 60%;
+  height: 16px;
 }
-.cards {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+.skel-type {
+  width: 40%;
 }
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  color: inherit;
-  text-decoration: none;
-  background: #fff;
+.skel-meta {
+  width: 85%;
 }
-.card:hover,
-.card:focus-visible {
-  border-color: #1f2937;
+.skel-badge {
+  width: 30%;
+  height: 22px;
+  border-radius: var(--radius-pill);
 }
-.card.manutencao {
-  background: #fffbeb;
-  border: 2px solid #d97706;
+.empty-title {
+  font-size: var(--fs-md);
 }
-.badge {
-  align-self: flex-start;
-  padding: 0.125rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  background: #dcfce7;
-  color: #166534;
-}
-.badge.EM_MANUTENCAO {
-  background: #fde68a;
-  color: #92400e;
-  font-weight: 600;
-}
-.badge.INATIVA {
-  background: #e5e7eb;
-  color: #374151;
+
+/* celular: chips de tipo em linha rolável, status vira select */
+@media (max-width: 640px) {
+  .filters {
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+  .tipo-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: var(--space-1);
+  }
+  .status-chips {
+    display: none;
+  }
+  .status-select {
+    display: flex;
+    width: 100%;
+  }
+  .rooms {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+  .room {
+    padding: 14px var(--space-4);
+    gap: 10px;
+  }
 }
