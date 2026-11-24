@@ -1,6 +1,89 @@
-.topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: 0.75rem 1rem; background: #1f2937; color: #fff; }
-.brand { margin-right: auto; }
-nav { display: flex; gap: 1rem; }
-nav a { color: #cbd5e1; text-decoration: none; padding: 0.25rem 0.5rem; border-radius: 4px; }
-nav a.active { color: #fff; background: #374151; }
-.content { padding: 1rem; max-width: 960px; margin: 0 auto; }
+.top {
+  background: var(--top-bg);
+  color: var(--top-fg);
+  border-bottom: 1px solid var(--top-border);
+}
+.top-in {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 var(--page-pad);
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  min-height: var(--top-h);
+  flex-wrap: wrap;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-head);
+  font-weight: 800;
+  font-size: var(--fs-lg);
+  color: inherit;
+  text-decoration: none;
+}
+.brand:hover {
+  color: inherit;
+}
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--brand-bg);
+  color: var(--brand-fg);
+}
+.nav {
+  display: flex;
+  gap: var(--space-1);
+}
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--ctl-h);
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-btn);
+  color: var(--top-link);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: var(--fs-sm);
+}
+.nav-link.is-active {
+  background: var(--nav-active-bg);
+  color: var(--nav-active-fg);
+}
+
+/* celular: marca no topo, navegação vira abas fixas embaixo */
+@media (max-width: 640px) {
+  .top-in {
+    padding: var(--space-2) var(--space-3);
+    min-height: var(--tabs-h);
+  }
+  .nav {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    background: var(--tabs-bg);
+    border-top: 1px solid var(--color-border);
+  }
+  .nav-link {
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-height: var(--tabs-h);
+    padding: 0;
+    border-radius: 0;
+    font-size: var(--fs-xs);
+    background: transparent;
+  }
+  .nav-link.is-active {
+    background: transparent;
+    color: var(--tab-active);
+  }
+}
