@@ -1,3 +1,29 @@
 spring:
   application:
     name: roombook
+  web:
+    locale: pt_BR
+    locale-resolver: fixed
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:${DB_PORT:5432}/${POSTGRES_DB:roombook}}
+    username: ${SPRING_DATASOURCE_USERNAME:${POSTGRES_USER:roombook}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${POSTGRES_PASSWORD}}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+roombook:
+  booking:
+    opening: ${BOOKING_OPENING:07:00}
+    closing: ${BOOKING_CLOSING:22:00}
+    zone: ${BOOKING_ZONE:America/Sao_Paulo}
+  cors:
+    # Origem(ns) do Angular, separadas por vírgula. Vazio = CORS desligado.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:${FRONT_PORT:4200}}
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

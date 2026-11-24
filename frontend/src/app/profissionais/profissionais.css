@@ -1,0 +1,142 @@
+/* Só tokens e classes base: nenhuma cor solta aqui. */
+.busca {
+  max-width: 480px;
+  margin-bottom: var(--space-4);
+}
+.with-ic {
+  position: relative;
+}
+.with-ic > app-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-muted);
+}
+.with-ic > .input {
+  padding-left: 40px;
+}
+.count {
+  font-size: var(--fs-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
+}
+.tbl-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.tbl th {
+  text-align: left;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  font-weight: 700;
+  padding: var(--cell-py) var(--cell-px);
+  background: var(--th-bg);
+  border-bottom: 1px solid var(--color-border-strong);
+  white-space: nowrap;
+}
+.tbl td {
+  padding: var(--cell-py) var(--cell-px);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.tbl tr:last-child td {
+  border-bottom: 0;
+}
+.tbl td.act {
+  text-align: right;
+}
+.strong {
+  font-weight: 700;
+}
+.cell-flex {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-sel-fg);
+  font-weight: 800;
+  font-size: var(--fs-xs);
+  flex: none;
+}
+.pcards {
+  display: none;
+}
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.req {
+  color: var(--color-danger);
+}
+.empty-title {
+  font-size: var(--fs-md);
+}
+.skel-list {
+  padding: var(--space-2) var(--space-4);
+}
+.skel-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+}
+.skel-av {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+.skel-l1 {
+  width: 22%;
+}
+.skel-l2 {
+  width: 30%;
+}
+
+@media (max-width: 640px) {
+  .busca {
+    max-width: none;
+  }
+  .tbl-wrap {
+    display: none;
+  }
+  .pcards {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .pcard {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+  }
+  .pinfo {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .pinfo .sub {
+    margin-top: 0;
+    overflow-wrap: anywhere;
+  }
+}

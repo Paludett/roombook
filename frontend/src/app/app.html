@@ -1,0 +1,23 @@
+<header class="top">
+  <div class="top-in">
+    <a class="brand" routerLink="/salas">
+      <span class="brand-mark"><app-icon name="logo" [size]="18" /></span>Roombook
+    </a>
+    <nav class="nav" aria-label="Principal">
+      <a class="nav-link" routerLink="/salas" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+        <app-icon name="salas" /><span>Salas</span>
+      </a>
+      <a class="nav-link" routerLink="/reservas" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+        <app-icon name="reservas" /><span>Reservas</span>
+      </a>
+      <a class="nav-link" routerLink="/profissionais" routerLinkActive="is-active" ariaCurrentWhenActive="page">
+        <app-icon name="profissionais" /><span>Profissionais</span>
+      </a>
+    </nav>
+  </div>
+</header>
+<app-error-banner />
+<main class="page">
+  <router-outlet />
+</main>
+<app-toast />

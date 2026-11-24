@@ -1,0 +1,132 @@
+<div class="page-head">
+  <div>
+    <h1 class="h1">Salas</h1>
+    <p class="sub">Escolha uma sala para ver a agenda do dia e reservar.</p>
+  </div>
+  @if (carregando()) {
+    <p class="loading" role="status">
+      <app-icon name="loader" [size]="18" />Carregando salas…
+    </p>
+  } @else if (resumo()) {
+    <p class="sub">{{ resumo() }}</p>
+  }
+</div>
+
+<div class="filters">
+  <div class="fgroup">
+    <span class="eyebrow">Tipo</span>
+    <div class="chips tipo-chips" role="group" aria-label="Filtrar por tipo">
+      <button type="button" class="chip" [attr.aria-pressed]="tipo() === ''" (click)="filtrar('tipo', '')">
+        Todos
+      </button>
+      @for (t of tipos; track t[0]) {
+        <button
+          type="button"
+          class="chip"
+          [attr.aria-pressed]="tipo() === t[0]"
+          (click)="filtrar('tipo', t[0])"
+        >
+          {{ t[1] }}
+        </button>
+      }
+    </div>
+  </div>
+  <div class="fgroup status-chips">
+    <span class="eyebrow">Status</span>
+    <div class="chips" role="group" aria-label="Filtrar por status">
+      <button type="button" class="chip" [attr.aria-pressed]="status() === ''" (click)="filtrar('status', '')">
+        Todos
+      </button>
+      @for (s of statuses; track s[0]) {
+        <button
+          type="button"
+          class="chip"
+          [attr.aria-pressed]="status() === s[0]"
+          (click)="filtrar('status', s[0])"
+        >
+          <app-icon [name]="statusIcon[s[0]]" [size]="14" />{{ s[1] }}
+        </button>
+      }
+    </div>
+  </div>
+  <div class="field status-select">
+    <label class="sr-only" for="status-sel">Status</label>
+    <div class="sel">
+      <select id="status-sel" class="select" [value]="status()" (change)="filtrar('status', $any($event.target).value)">
+        <option value="">Status: todos</option>
+        @for (s of statuses; track s[0]) {
+          <option [value]="s[0]">{{ s[1] }}</option>
+        }
+      </select>
+      <app-icon name="chevron-down" />
+    </div>
+  </div>
+</div>
+
+@if (carregando()) {
+  <div class="rooms" aria-hidden="true">
+    @for (i of esqueletos; track i) {
+      <div class="card skel-card">
+        <div class="skel-top">
+          <span class="skel skel-ic"></span>
+          <span class="skel-lines">
+            <span class="skel skel-name"></span>
+            <span class="skel skel-type"></span>
+          </span>
+        </div>
+        <span class="skel skel-meta"></span>
+        <span class="skel skel-badge"></span>
+      </div>
+    }
+  </div>
+} @else if (falhou()) {
+  <div class="empty">
+    <span class="empty-ic"><app-icon name="alert" [size]="26" /></span>
+    <p class="h2 empty-title">Sem dados para mostrar</p>
+    <p class="sub">A lista aparece aqui assim que a conexão voltar.</p>
+    <button type="button" class="btn btn-secondary" (click)="recarregar()">Tentar de novo</button>
+  </div>
+} @else if (salas().length === 0) {
+  <div class="empty">
+    <span class="empty-ic"><app-icon name="search-x" [size]="26" /></span>
+    <p class="h2 empty-title">Nenhuma sala encontrada</p>
+    <p class="sub">Ajuste os filtros de tipo ou status.</p>
+    @if (tipo() || status()) {
+      <button type="button" class="btn btn-secondary" (click)="limpar()">Limpar filtros</button>
+    }
+  </div>
+} @else {
+  <ul class="rooms">
+    @for (s of salas(); track s.id) {
+      <li>
+        <a class="card room" [class]="variante(s.status)" [routerLink]="['/salas', s.id, 'agenda']">
+          <span class="room-top">
+            <span class="room-ic"><app-icon [name]="tipoIcon[s.type]" [size]="22" /></span>
+            <span class="room-id">
+              <span class="room-name">{{ s.name }}</span>
+              <span class="room-type">{{ tipoLabel(s.type) }}</span>
+            </span>
+          </span>
+          <span class="room-meta">
+            <span><app-icon name="pin" [size]="15" />{{ s.floorWing }}</span>
+            <span>
+              <app-icon name="sparkles" [size]="15" />
+              {{ s.sanitizationMinutes ? 'Higienização ' + s.sanitizationMinutes + ' min' : 'Sem higienização' }}
+            </span>
+          </span>
+          @if (s.status === 'EM_MANUTENCAO') {
+            <span class="room-alert"><app-icon name="alert" [size]="16" />Agenda bloqueada para reservas</span>
+          } @else if (s.status === 'INATIVA') {
+            <span class="room-alert muted"><app-icon name="ban" [size]="16" />Fora de uso, sem novas reservas</span>
+          }
+          <span class="room-foot">
+            <span class="badge" [class]="badge[s.status]">
+              <app-icon [name]="statusIcon[s.status]" [size]="14" />{{ statusLabel(s.status) }}
+            </span>
+            <span class="room-cta">Ver agenda<app-icon name="chevron-right" /></span>
+          </span>
+        </a>
+      </li>
+    }
+  </ul>
+}
