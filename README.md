@@ -107,6 +107,39 @@ set -a; . ./.env; set +a; ./mvnw test   # API (os de Testcontainers também prec
 cd frontend && npx ng test --watch=false  # front
 ```
 
+## Arquitetura
+
+```mermaid
+flowchart TB
+    A[Angular] -->|HTTP JSON| C[Controller]
+    subgraph API["API Spring Boot"]
+        C --> S[Service<br/>valida regras e calcula blocked_until]
+        S --> R[Repository JPA]
+    end
+    R --> D[(PostgreSQL 16<br/>exclusion constraint)]
+    D -. "23P01 exclusion_violation" .-> H[GlobalExceptionHandler]
+    H -. "409 ProblemDetail" .-> A
+```
+
+O service faz uma checagem prévia só para dar uma mensagem amigável. Quem garante a regra, mesmo com requisições simultâneas, é a *exclusion constraint* do banco.
+
+```mermaid
+sequenceDiagram
+    participant F as Angular
+    participant A as API
+    participant B as PostgreSQL
+    F->>A: POST /bookings
+    A->>A: valida horário e calcula blocked_until
+    A->>B: INSERT reserva
+    alt horário livre
+        B-->>A: ok
+        A-->>F: 201 Created
+    else sobreposição (inclusive higienização)
+        B-->>A: erro 23P01
+        A-->>F: 409 ProblemDetail
+    end
+```
+
 ## Decisões técnicas
 
 **Sobreposição resolvida no banco, não na aplicação.** Verificar "tem conflito?" e depois inserir tem corrida: duas requisições simultâneas passam na checagem. A tabela `bookings` tem uma *exclusion constraint*:
@@ -144,6 +177,22 @@ O fluxo de cada issue:
 2. **Implementação com testes**, no menor escopo que atende a issue.
 3. **Revisão do código** e **teste manual** da funcionalidade rodando (API com `curl`, telas abertas ao lado do mockup em [`docs/design`](docs/design/direcao-a), no desktop e no celular) antes de abrir o PR.
 4. **PR para `develop`** com resumo e casos testados; merge só depois da validação.
+
+```mermaid
+flowchart LR
+    subgraph onda["Onda: issues sem dependência rodam em paralelo"]
+        direction TB
+        I1[Issue A<br/>branch feature/issue-A]
+        I2[Issue B<br/>branch feature/issue-B]
+        I3[Issue C<br/>branch feature/issue-C]
+    end
+    onda --> F
+    subgraph F["Fluxo de cada issue"]
+        direction LR
+        SP[Spec em docs/specs] --> IM[Implementação e testes] --> RV[Revisão do código] --> TM[Teste manual] --> PR[PR para develop] --> MG[Merge]
+    end
+    MG --> N[Próxima onda]
+```
 
 Agentes de IA foram usados como ferramenta de implementação e revisão dentro desse processo. As decisões de produto, as specs e a validação final são humanas, e os commits e PRs são descritivos, sem atribuição de autoria a ferramentas.
 
