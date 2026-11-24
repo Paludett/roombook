@@ -13,6 +13,7 @@ import {
 import { BookingService } from '../core/booking.service';
 import { ErrorService } from '../core/error.service';
 import { Icon } from '../core/icon';
+import { Modal } from '../core/modal';
 import { ProfessionalService } from '../core/professional.service';
 import { RoomService } from '../core/room.service';
 import { ToastService } from '../core/toast.service';
@@ -42,7 +43,7 @@ const naoVazio = (c: { value: string }): ValidationErrors | null =>
 
 @Component({
   selector: 'app-agenda',
-  imports: [RouterLink, ReactiveFormsModule, Icon],
+  imports: [RouterLink, ReactiveFormsModule, Icon, Modal],
   templateUrl: './agenda.html',
   styleUrl: './agenda.css',
 })
