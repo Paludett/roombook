@@ -5,10 +5,11 @@ import dev.paludett.roombook.domain.BookingStatus;
 import java.time.Instant;
 
 public record BookingResponse(Long id, Long roomId, Long professionalId, Instant startTime, Instant endTime,
-		Instant blockedUntil, String purpose, BookingStatus status) {
+		Instant blockedUntil, String purpose, BookingStatus status, String roomName, String professionalName) {
 
 	public static BookingResponse from(Booking b) {
 		return new BookingResponse(b.getId(), b.getRoom().getId(), b.getProfessional().getId(),
-				b.getStartTime(), b.getEndTime(), b.getBlockedUntil(), b.getPurpose(), b.getStatus());
+				b.getStartTime(), b.getEndTime(), b.getBlockedUntil(), b.getPurpose(), b.getStatus(),
+				b.getRoom().getName(), b.getProfessional().getName());
 	}
 }
