@@ -9,7 +9,7 @@
 ## Regras
 - Filtros opcionais (combinam com E): `roomId`, `professionalId`, `date` (AAAA-MM-DD no fuso de `BookingProperties.zone`, compara com o início da reserva), `status` (`CONFIRMED` ou `CANCELLED`).
 - Paginação Spring: `page`, `size`, `sort`. Padrão ordenado por `startTime`. Ordenação aceita só `id, startTime, endTime, status, createdAt`.
-- Resposta: `Page<BookingResponse>`; `BookingResponse` ganhou `roomName` e `professionalName` (campos novos, o POST continua compatível).
+- Resposta (`PageSerializationMode.VIA_DTO`, JSON estável): `{ "content": [BookingResponse...], "page": { "size", "number", "totalElements", "totalPages" } }`; `BookingResponse` ganhou `roomName` e `professionalName` (campos novos, o POST continua compatível).
 - `date`, `status` ou `sort` inválidos: 400 em português (ProblemDetail).
 
 ## N+1
