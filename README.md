@@ -34,78 +34,17 @@ No celular as telas se reorganizam, com navegação inferior e a agenda em uma c
 
 ## Como rodar
 
-Pré-requisitos: Docker com Compose, Node 22 e npm. (Java 21 só é preciso para rodar a API fora do Docker ou os testes.)
-
-### 1. Banco e API (Docker Compose)
+Pré-requisitos: Docker com Compose, Node 22 e npm. (Java 21 só para rodar a API fora do Docker ou os testes.)
 
 ```bash
 cp .env.example .env        # troque POSTGRES_PASSWORD
 docker compose up -d --build
+cd frontend && npm install --legacy-peer-deps && npm run start:local
 ```
 
-O `docker-compose.yml` sobe o PostgreSQL e a API com o perfil `dev`, que além das migrations carrega dados de exemplo (salas e profissionais com e-mails `@exemplo.test`, sem login).
+Abre em `http://localhost:4200` (API em `http://localhost:8080`, docs em `/swagger-ui/index.html`).
 
-Variáveis (no `.env`):
-
-| Variável | Padrão | Para quê |
-|---|---|---|
-| `POSTGRES_PASSWORD` | sem padrão, obrigatória | senha do banco |
-| `POSTGRES_DB`, `POSTGRES_USER` | `roombook` | banco e usuário |
-| `DB_PORT` | `5432` | porta do banco no host (mude se estiver ocupada) |
-| `SERVER_PORT` | `8080` | porta da API no host |
-| `CORS_ALLOWED_ORIGINS` | `http://localhost:4200` | origem do front liberada no CORS |
-
-Com a API no ar: `http://localhost:8080/swagger-ui/index.html` (documentação) e `http://localhost:8080/rooms`.
-
-### 2. Front (Angular)
-
-```bash
-cd frontend
-npm install --legacy-peer-deps
-npm run start:local
-```
-
-Abre em `http://localhost:4200`. O script `start:local` gera `src/environments/environment.local.ts` apontando para `http://localhost:$API_PORT` (padrão 8080).
-
-Variáveis do front:
-
-| Variável | Padrão | Para quê |
-|---|---|---|
-| `FRONT_PORT` | `4200` | porta do `ng serve` |
-| `API_PORT` | `8080` | porta da API (use o mesmo valor de `SERVER_PORT`) |
-| `API_URL` | `http://localhost:$API_PORT` | URL completa da API, se não for local |
-
-Se mudar a porta do front, libere-a no CORS da API: `CORS_ALLOWED_ORIGINS=http://localhost:4223` no `.env`. Exemplo com tudo em portas alternativas:
-
-```bash
-# .env: DB_PORT=5433, SERVER_PORT=8081, CORS_ALLOWED_ORIGINS=http://localhost:4223
-docker compose up -d --build
-cd frontend && API_PORT=8081 FRONT_PORT=4223 npm run start:local
-```
-
-### Sem Docker para a API
-
-Suba só o banco (`docker compose up -d db`) e rode a API na máquina:
-
-```bash
-SPRING_PROFILES_ACTIVE=dev \
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/roombook \
-SPRING_DATASOURCE_USERNAME=roombook \
-SPRING_DATASOURCE_PASSWORD=<a senha do .env> \
-FRONT_PORT=4200 ./mvnw spring-boot:run
-```
-
-Nesse modo o CORS libera `http://localhost:$FRONT_PORT` (padrão 4200).
-
-### Testes
-
-Os testes `@SpringBootTest` usam o banco do `application.yaml`, que lê `POSTGRES_PASSWORD`, `DB_PORT` etc. do ambiente. O `mvnw` não lê o `.env` sozinho, então carregue-o antes:
-
-```bash
-docker compose up -d db
-set -a; . ./.env; set +a; ./mvnw test   # API (os de Testcontainers também precisam de Docker)
-cd frontend && npx ng test --watch=false  # front
-```
+Testes: `set -a; . ./.env; set +a; ./mvnw test` (API) e `cd frontend && npx ng test --watch=false` (front). Portas alternativas, API sem Docker e detalhes em [desenvolvimento local](docs/desenvolvimento-local.md).
 
 ## Arquitetura
 
@@ -123,78 +62,26 @@ flowchart TB
 
 O service faz uma checagem prévia só para dar uma mensagem amigável. Quem garante a regra, mesmo com requisições simultâneas, é a *exclusion constraint* do banco.
 
-```mermaid
-sequenceDiagram
-    participant F as Angular
-    participant A as API
-    participant B as PostgreSQL
-    F->>A: POST /bookings
-    A->>A: valida horário e calcula blocked_until
-    A->>B: INSERT reserva
-    alt horário livre
-        B-->>A: ok
-        A-->>F: 201 Created
-    else sobreposição (inclusive higienização)
-        B-->>A: erro 23P01
-        A-->>F: 409 ProblemDetail
-    end
-```
+O segundo diagrama (sequência do `POST /bookings`) está em [docs/arquitetura.md](docs/arquitetura.md).
 
 ## Decisões técnicas
 
-**Sobreposição resolvida no banco, não na aplicação.** Verificar "tem conflito?" e depois inserir tem corrida: duas requisições simultâneas passam na checagem. A tabela `bookings` tem uma *exclusion constraint*:
+- **Sobreposição resolvida no banco**, com *exclusion constraint* em `tstzrange(start_time, blocked_until)`, não na aplicação.
+- **N+1 na listagem de reservas** eliminado com `@EntityGraph`; teste exige no máximo 2 statements.
+- **Erros em `ProblemDetail`** (RFC 9457), em português.
+- **Sem dados de paciente**: o sistema reserva salas, não atendimentos.
+- **Testcontainers** para o que depende do Postgres real (`tstzrange`, `btree_gist`).
+- **UTC na API, fuso da clínica (-03:00) no front.**
 
-```sql
-EXCLUDE USING gist (
-    room_id WITH =,
-    tstzrange(start_time, blocked_until) WITH &&
-) WHERE (status = 'CONFIRMED');
-```
+Detalhes e o SQL da constraint em [docs/arquitetura.md](docs/arquitetura.md).
 
-`blocked_until` é o fim da reserva mais a higienização da sala, calculado no servidor (o cliente nunca o envia). A faixa que conta é `start_time` até `blocked_until`, então a higienização também bloqueia. Reservas canceladas ficam fora do `WHERE` e liberam o horário. A violação vira `409` na API. Detalhes em [`docs/specs/sobreposicao-higienizacao.md`](docs/specs/sobreposicao-higienizacao.md).
+## Documentação
 
-**N+1 na listagem de reservas.** Cada linha mostra nome da sala e do profissional; carregar `room` e `professional` de forma preguiçosa disparava uma query por linha (7 statements para uma página de 5 reservas). O `@EntityGraph(attributePaths = {"room", "professional"})` em `BookingRepository` traz tudo num join e o teste `BookingListTest` agora exige no máximo 2 statements (a página e a contagem).
-
-**Erros em `ProblemDetail`, em português.** Um `GlobalExceptionHandler` converte regras de negócio (409), entrada inválida (400) e não encontrado (404) no formato RFC 9457, com a mensagem pronta para o front mostrar:
-
-```json
-{ "title": "Conflict", "status": 409, "detail": "A sala já está reservada ou em higienização nesse horário", "instance": "/bookings" }
-```
-
-**Sem dados de paciente.** O sistema reserva salas, não atendimentos: não existe entidade de paciente. A reserva guarda só o profissional, a sala, o horário e uma finalidade em texto livre. Isso mantém o projeto fora do escopo de dados sensíveis de saúde; a finalidade não deve receber nomes de pacientes.
-
-**Testcontainers para o que depende do Postgres.** A constraint usa `tstzrange` e `btree_gist`, que H2 não tem. O `BookingOverlapConstraintTest` sobe um PostgreSQL 16 real e prova que a constraint rejeita sobreposições, inclusive dentro da janela de higienização.
-
-**Horários em UTC na API, fuso da clínica no front.** A API trafega `Instant`; o horário comercial e a exibição usam o fuso da clínica (-03:00).
-
-## Como foi desenvolvido
-
-O projeto foi quebrado em issues pequenas do GitHub e resolvido em ondas paralelas: as issues sem dependência entre si rodavam ao mesmo tempo, cada uma na sua branch (`feature/issue-N`, a partir de `develop`) e com banco e portas próprios, para não haver conflito.
-
-O fluxo de cada issue:
-
-1. **Spec primeiro.** Regras de negócio e critérios de aceite escritos em [`docs/specs`](docs/specs) (a partir de um template) antes do código.
-2. **Implementação com testes**, no menor escopo que atende a issue.
-3. **Revisão do código** e **teste manual** da funcionalidade rodando (API com `curl`, telas abertas ao lado do mockup em [`docs/design`](docs/design/direcao-a), no desktop e no celular) antes de abrir o PR.
-4. **PR para `develop`** com resumo e casos testados; merge só depois da validação.
-
-```mermaid
-flowchart LR
-    subgraph onda["Onda: issues sem dependência rodam em paralelo"]
-        direction TB
-        I1[Issue A<br/>branch feature/issue-A]
-        I2[Issue B<br/>branch feature/issue-B]
-        I3[Issue C<br/>branch feature/issue-C]
-    end
-    onda --> F
-    subgraph F["Fluxo de cada issue"]
-        direction LR
-        SP[Spec em docs/specs] --> IM[Implementação e testes] --> RV[Revisão do código] --> TM[Teste manual] --> PR[PR para develop] --> MG[Merge]
-    end
-    MG --> N[Próxima onda]
-```
-
-Agentes de IA foram usados como ferramenta de implementação e revisão dentro desse processo. As decisões de produto, as specs e a validação final são humanas, e os commits e PRs são descritivos, sem atribuição de autoria a ferramentas.
+- [Desenvolvimento local](docs/desenvolvimento-local.md): variáveis, portas alternativas, CORS, API sem Docker, testes.
+- [Deploy no Railway](docs/deploy-railway.md): API, front e Postgres para testes públicos.
+- [Arquitetura e decisões técnicas](docs/arquitetura.md)
+- [Como foi desenvolvido](docs/como-foi-desenvolvido.md)
+- [Specs](docs/specs) e [mockups](docs/design)
 
 ## Estrutura
 
