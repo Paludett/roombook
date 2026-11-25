@@ -2,6 +2,8 @@
 
 Reserva de salas clínicas com higienização automática entre uma reserva e outra.
 
+<!-- Demo: https://<dominio-do-front> · API (Swagger): https://<dominio-do-front>/api/swagger-ui/index.html -->
+
 ![Agenda do dia de uma sala](docs/screenshots/agenda-dia.png)
 
 ## O problema
@@ -42,7 +44,7 @@ docker compose up -d --build
 cd frontend && npm install --legacy-peer-deps && npm run start:local
 ```
 
-Abre em `http://localhost:4200` (API em `http://localhost:8080`, docs em `/swagger-ui/index.html`).
+Abre em `http://localhost:4200` (API em `http://localhost:8080`, Swagger local em `http://localhost:8080/swagger-ui/index.html`).
 
 Testes: `set -a; . ./.env; set +a; ./mvnw test` (API) e `cd frontend && npx ng test --watch=false` (front). Portas alternativas, API sem Docker e detalhes em [desenvolvimento local](docs/desenvolvimento-local.md).
 
