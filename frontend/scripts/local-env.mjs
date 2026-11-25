@@ -9,7 +9,7 @@ if (existsSync(wt)) {
     if (m && !(m[1] in env)) env[m[1]] = m[2];
   }
 }
-const apiUrl = env.API_URL ?? `http://localhost:${env.API_PORT ?? 8080}`;
+const apiUrl = env.API_URL || `http://localhost:${env.API_PORT ?? 8080}`;
 writeFileSync(
   new URL('../src/environments/environment.local.ts', import.meta.url),
   `export const environment = {\n  apiUrl: '${apiUrl}',\n};\n`,
