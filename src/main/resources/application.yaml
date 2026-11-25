@@ -1,5 +1,7 @@
 server:
   port: ${PORT:${SERVER_PORT:8080}}
+  # atrás do proxy do front (/api): usa X-Forwarded-* (host, proto, prefix) nas URLs geradas, ex.: Swagger
+  forward-headers-strategy: framework
 spring:
   application:
     name: roombook

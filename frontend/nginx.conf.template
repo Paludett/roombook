@@ -1,6 +1,34 @@
+# Repassa o esquema original (o Railway termina o TLS antes do nginx).
+map $http_x_forwarded_proto $fwd_proto {
+  default $http_x_forwarded_proto;
+  ""      $scheme;
+}
+
 server {
   listen ${PORT};
   root /usr/share/nginx/html;
+
+  # DNS resolvido em runtime (variável no proxy_pass): o nginx sobe mesmo se a API ainda não resolve.
+  # NGINX_LOCAL_RESOLVERS vem do /etc/resolv.conf (NGINX_ENTRYPOINT_LOCAL_RESOLVERS no Dockerfile).
+  resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
+
+  # actuator não é exposto pelo proxy
+  location ^~ /api/actuator {
+    return 404;
+  }
+
+  # /api/x -> ${API_UPSTREAM}/x
+  location /api/ {
+    set $api_upstream ${API_UPSTREAM};
+    rewrite ^/api/(.*)$ /$1 break;
+    proxy_pass $api_upstream;
+    proxy_set_header Host $proxy_host;
+    proxy_set_header X-Forwarded-Proto $fwd_proto;
+    proxy_set_header X-Forwarded-Host $http_host;
+    proxy_set_header X-Forwarded-Prefix /api;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
   location / {
     try_files $uri /index.html;
   }
